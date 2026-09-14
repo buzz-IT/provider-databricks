@@ -15,8 +15,7 @@ spec:
   forProvider:
     name: ${data.catalogName}
     comment: uptest e2e catalog
-    properties:
-      purpose: e2e
+    forceDestroy: true
 ---
 apiVersion: unity.databricks.crossplane.io/v1beta1
 kind: Schema

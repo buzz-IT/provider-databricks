@@ -115,3 +115,7 @@ jobs:
             unset UPTEST_EXAMPLE_LIST
           fi
           make e2e
+
+      - name: Dump managed resources on failure
+        if: failure() && steps.creds.outputs.available == 'true'
+        run: ./cluster/test/dump-managed.sh

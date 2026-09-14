@@ -252,7 +252,7 @@ UPTEST_DELETE_FLAG := $(if $(filter true,$(UPTEST_SKIP_DELETE)),--skip-delete,)
 uptest: $(TF_PROVIDER_MODULE) $(UPTEST) $(KUBECTL) $(CHAINSAW) $(CROSSPLANE_CLI)
 	@$(INFO) running automated tests
 	@UPTEST_DATASOURCE_PATH="$(UPTEST_DATASOURCE_PATH)" ./cluster/test/render-datasource.sh
-	@KUBECTL=$(KUBECTL) CHAINSAW=$(CHAINSAW) CROSSPLANE_CLI=$(CROSSPLANE_CLI) CROSSPLANE_NAMESPACE=$(CROSSPLANE_NAMESPACE) UPTEST_DATASOURCE_PATH="$(UPTEST_DATASOURCE_PATH)" $(UPTEST) e2e "${UPTEST_EXAMPLE_LIST}" --data-source="${UPTEST_DATASOURCE_PATH}" --setup-script=cluster/test/setup.sh --default-conditions="Ready" $(UPTEST_DELETE_FLAG) || $(FAIL)
+	@KUBECTL=$(KUBECTL) CHAINSAW=$(CHAINSAW) CROSSPLANE_CLI=$(CROSSPLANE_CLI) CROSSPLANE_NAMESPACE=$(CROSSPLANE_NAMESPACE) UPTEST_DATASOURCE_PATH="$(UPTEST_DATASOURCE_PATH)" $(UPTEST) e2e "${UPTEST_EXAMPLE_LIST}" --data-source="${UPTEST_DATASOURCE_PATH}" --setup-script=cluster/test/setup.sh --teardown-script=cluster/test/dump-managed.sh --default-conditions="Ready" $(UPTEST_DELETE_FLAG) || $(FAIL)
 	@$(OK) running automated tests
 
 uptest-debug: UPTEST_SKIP_DELETE := true
