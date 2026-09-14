@@ -1,0 +1,26 @@
+apiVersion: meta.pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-databricks
+  annotations:
+    friendly-name.meta.crossplane.io: Provider Databricks
+    meta.crossplane.io/description: Upjet-generated Crossplane provider for Databricks
+    meta.crossplane.io/license: Apache-2.0
+    meta.crossplane.io/maintainer: Buzz-IT GmbH
+    meta.crossplane.io/source: github.com/buzz-IT/provider-databricks
+    meta.crossplane.io/readme: |
+      `provider-databricks` is a Crossplane provider that manages Databricks
+      resources from Kubernetes. It is fully generated with Upjet v2 from the
+      official Databricks Terraform provider (no-fork SDK v2 + Plugin Framework),
+      and ships both cluster-scoped and namespaced managed resources for
+      Crossplane v2.
+
+      Authentication is configured with a ProviderConfig secret that accepts the
+      same fields as the Terraform Databricks provider (host, token, account_id,
+      Azure, AWS, and GCP credentials).
+
+      See the Databricks Terraform provider documentation for resource fields:
+      https://registry.terraform.io/providers/databricks/databricks/latest/docs
+spec:
+  capabilities:
+    - SafeStart

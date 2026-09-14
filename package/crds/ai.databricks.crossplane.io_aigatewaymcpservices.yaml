@@ -1,0 +1,543 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.21.0
+  name: aigatewaymcpservices.ai.databricks.crossplane.io
+spec:
+  group: ai.databricks.crossplane.io
+  names:
+    categories:
+    - crossplane
+    - managed
+    - databricks
+    kind: AIGatewayMcpService
+    listKind: AIGatewayMcpServiceList
+    plural: aigatewaymcpservices
+    singular: aigatewaymcpservice
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.conditions[?(@.type=='Synced')].status
+      name: SYNCED
+      type: string
+    - jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: READY
+      type: string
+    - jsonPath: .metadata.annotations.crossplane\.io/external-name
+      name: EXTERNAL-NAME
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: AIGatewayMcpService is the Schema for the AIGatewayMcpServices
+          API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: AIGatewayMcpServiceSpec defines the desired state of AIGatewayMcpService
+            properties:
+              deletionPolicy:
+                default: Delete
+                description: |-
+                  DeletionPolicy specifies what will happen to the underlying external
+                  when this managed resource is deleted - either "Delete" or "Orphan" the
+                  external resource.
+                  This field is planned to be deprecated in favor of the ManagementPolicies
+                  field in a future release. Currently, both could be set independently and
+                  non-default values would be honored if the feature flag is enabled.
+                  See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223
+                enum:
+                - Orphan
+                - Delete
+                type: string
+              forProvider:
+                properties:
+                  comment:
+                    description: User-provided description
+                    type: string
+                  config:
+                    description: |-
+                      Connection, tool selectors, and rate limits. Required on Create. On Update,
+                      provide this field when update_mask contains config or one of its
+                      subpaths
+                    properties:
+                      includeToolSelectors:
+                        description: |-
+                          Tool names or prefix patterns to expose from the MCP server. Use exact
+                          tool names or prefix patterns such as read_*. An empty list exposes all
+                          tools. At most 1,024 selectors are allowed, and each selector can contain
+                          at most 256 characters
+                        items:
+                          type: string
+                        type: array
+                      rateLimits:
+                        description: |-
+                          Rate limits for tool invocations. Supported scopes are user, group, service
+                          principal, the service as a whole, and each user by default. Request and
+                          token limits are supported. Empty when no rate limit is configured
+                        items:
+                          properties:
+                            key:
+                              description: |-
+                                Scope of the rate limit. Depending on this value, the limit applies to a
+                                principal, the service as a whole, or each user by default. Possible values are: RATE_LIMIT_KEY_SERVICE, RATE_LIMIT_KEY_SERVICE_PRINCIPAL, RATE_LIMIT_KEY_USER, RATE_LIMIT_KEY_USER_DEFAULT, RATE_LIMIT_KEY_USER_GROUP
+                              type: string
+                            principal:
+                              description: |-
+                                Principal this limit applies to: user email, group name, or service
+                                principal application ID. Required when key applies to a user, group, or
+                                service principal; otherwise it must be unset
+                              type: string
+                            renewalPeriod:
+                              description: 'Renewal period. Possible values are: RATE_LIMIT_RENEWAL_PERIOD_HOUR,
+                                RATE_LIMIT_RENEWAL_PERIOD_MINUTE'
+                              type: string
+                            requests:
+                              description: |-
+                                Maximum requests allowed in one renewal period. Leave unset for no request
+                                limit. Set to 0 to deny all requests
+                              type: number
+                            tokens:
+                              description: |-
+                                Maximum tokens allowed in one renewal period. Leave unset for no token
+                                limit. Set to 0 to deny all requests
+                              type: number
+                          type: object
+                        type: array
+                      sourceConnection:
+                        description: Unity Catalog connection referencing the MCP
+                          server. Required on Create
+                        properties:
+                          name:
+                            description: |-
+                              Resource name of the Unity Catalog connection used to access the MCP
+                              server, in the form connections/{catalog}.{schema}.{connection}
+                            type: string
+                        type: object
+                    type: object
+                  mcpServiceId:
+                    description: Name for the MCP service, e.g. "my_mcp_service"
+                    type: string
+                  parent:
+                    description: |-
+                      Name of the parent schema.
+                      Format: schemas/{catalog}.{schema}.
+                      Each {...} component is capped at 255 characters individually
+                    type: string
+                  providerConfig:
+                    description: Configure the provider for management through account
+                      provider.
+                    properties:
+                      workspaceId:
+                        description: Workspace ID which the resource belongs to. This
+                          workspace must be part of the account which the provider
+                          is configured with.
+                        type: string
+                    type: object
+                type: object
+              initProvider:
+                description: |-
+                  THIS IS A BETA FIELD. It will be honored
+                  unless the Management Policies feature flag is disabled.
+                  InitProvider holds the same fields as ForProvider, with the exception
+                  of Identifier and other resource reference fields. The fields that are
+                  in InitProvider are merged into ForProvider when the resource is created.
+                  The same fields are also added to the terraform ignore_changes hook, to
+                  avoid updating them after creation. This is useful for fields that are
+                  required on creation, but we do not desire to update them after creation,
+                  for example because of an external controller is managing them, like an
+                  autoscaler.
+                properties:
+                  comment:
+                    description: User-provided description
+                    type: string
+                  config:
+                    description: |-
+                      Connection, tool selectors, and rate limits. Required on Create. On Update,
+                      provide this field when update_mask contains config or one of its
+                      subpaths
+                    properties:
+                      includeToolSelectors:
+                        description: |-
+                          Tool names or prefix patterns to expose from the MCP server. Use exact
+                          tool names or prefix patterns such as read_*. An empty list exposes all
+                          tools. At most 1,024 selectors are allowed, and each selector can contain
+                          at most 256 characters
+                        items:
+                          type: string
+                        type: array
+                      rateLimits:
+                        description: |-
+                          Rate limits for tool invocations. Supported scopes are user, group, service
+                          principal, the service as a whole, and each user by default. Request and
+                          token limits are supported. Empty when no rate limit is configured
+                        items:
+                          properties:
+                            key:
+                              description: |-
+                                Scope of the rate limit. Depending on this value, the limit applies to a
+                                principal, the service as a whole, or each user by default. Possible values are: RATE_LIMIT_KEY_SERVICE, RATE_LIMIT_KEY_SERVICE_PRINCIPAL, RATE_LIMIT_KEY_USER, RATE_LIMIT_KEY_USER_DEFAULT, RATE_LIMIT_KEY_USER_GROUP
+                              type: string
+                            principal:
+                              description: |-
+                                Principal this limit applies to: user email, group name, or service
+                                principal application ID. Required when key applies to a user, group, or
+                                service principal; otherwise it must be unset
+                              type: string
+                            renewalPeriod:
+                              description: 'Renewal period. Possible values are: RATE_LIMIT_RENEWAL_PERIOD_HOUR,
+                                RATE_LIMIT_RENEWAL_PERIOD_MINUTE'
+                              type: string
+                            requests:
+                              description: |-
+                                Maximum requests allowed in one renewal period. Leave unset for no request
+                                limit. Set to 0 to deny all requests
+                              type: number
+                            tokens:
+                              description: |-
+                                Maximum tokens allowed in one renewal period. Leave unset for no token
+                                limit. Set to 0 to deny all requests
+                              type: number
+                          type: object
+                        type: array
+                      sourceConnection:
+                        description: Unity Catalog connection referencing the MCP
+                          server. Required on Create
+                        properties:
+                          name:
+                            description: |-
+                              Resource name of the Unity Catalog connection used to access the MCP
+                              server, in the form connections/{catalog}.{schema}.{connection}
+                            type: string
+                        type: object
+                    type: object
+                  mcpServiceId:
+                    description: Name for the MCP service, e.g. "my_mcp_service"
+                    type: string
+                  parent:
+                    description: |-
+                      Name of the parent schema.
+                      Format: schemas/{catalog}.{schema}.
+                      Each {...} component is capped at 255 characters individually
+                    type: string
+                  providerConfig:
+                    description: Configure the provider for management through account
+                      provider.
+                    properties:
+                      workspaceId:
+                        description: Workspace ID which the resource belongs to. This
+                          workspace must be part of the account which the provider
+                          is configured with.
+                        type: string
+                    type: object
+                type: object
+              managementPolicies:
+                default:
+                - '*'
+                description: |-
+                  THIS IS A BETA FIELD. It is on by default but can be opted out
+                  through a Crossplane feature flag.
+                  ManagementPolicies specify the array of actions Crossplane is allowed to
+                  take on the managed and external resources.
+                  This field is planned to replace the DeletionPolicy field in a future
+                  release. Currently, both could be set independently and non-default
+                  values would be honored if the feature flag is enabled. If both are
+                  custom, the DeletionPolicy field will be ignored.
+                  See the design doc for more information: https://github.com/crossplane/crossplane/blob/499895a25d1a1a0ba1604944ef98ac7a1a71f197/design/design-doc-observe-only-resources.md?plain=1#L223
+                  and this one: https://github.com/crossplane/crossplane/blob/444267e84783136daa93568b364a5f01228cacbe/design/one-pager-ignore-changes.md
+                items:
+                  description: |-
+                    A ManagementAction represents an action that the Crossplane controllers
+                    can take on an external resource.
+                  enum:
+                  - Observe
+                  - Create
+                  - Update
+                  - Delete
+                  - LateInitialize
+                  - '*'
+                  type: string
+                type: array
+              providerConfigRef:
+                default:
+                  name: default
+                description: |-
+                  ProviderConfigReference specifies how the provider that will be used to
+                  create, observe, update, and delete this managed resource should be
+                  configured.
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                  policy:
+                    description: Policies for referencing.
+                    properties:
+                      resolution:
+                        default: Required
+                        description: |-
+                          Resolution specifies whether resolution of this reference is required.
+                          The default is 'Required', which means the reconcile will fail if the
+                          reference cannot be resolved. 'Optional' means this reference will be
+                          a no-op if it cannot be resolved.
+                        enum:
+                        - Required
+                        - Optional
+                        type: string
+                      resolve:
+                        description: |-
+                          Resolve specifies when this reference should be resolved. The default
+                          is 'IfNotPresent', which will attempt to resolve the reference only when
+                          the corresponding field is not present. Use 'Always' to resolve the
+                          reference on every reconcile.
+                        enum:
+                        - Always
+                        - IfNotPresent
+                        type: string
+                    type: object
+                required:
+                - name
+                type: object
+              writeConnectionSecretToRef:
+                description: |-
+                  WriteConnectionSecretToReference specifies the namespace and name of a
+                  Secret to which any connection details for this managed resource should
+                  be written. Connection details frequently include the endpoint, username,
+                  and password required to connect to the managed resource.
+                properties:
+                  name:
+                    description: Name of the secret.
+                    type: string
+                  namespace:
+                    description: Namespace of the secret.
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
+            required:
+            - forProvider
+            type: object
+            x-kubernetes-validations:
+            - message: spec.forProvider.mcpServiceId is a required parameter
+              rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
+                || ''Update'' in self.managementPolicies) || has(self.forProvider.mcpServiceId)
+                || (has(self.initProvider) && has(self.initProvider.mcpServiceId))'
+            - message: spec.forProvider.parent is a required parameter
+              rule: '!(''*'' in self.managementPolicies || ''Create'' in self.managementPolicies
+                || ''Update'' in self.managementPolicies) || has(self.forProvider.parent)
+                || (has(self.initProvider) && has(self.initProvider.parent))'
+          status:
+            description: AIGatewayMcpServiceStatus defines the observed state of AIGatewayMcpService.
+            properties:
+              atProvider:
+                properties:
+                  comment:
+                    description: User-provided description
+                    type: string
+                  config:
+                    description: |-
+                      Connection, tool selectors, and rate limits. Required on Create. On Update,
+                      provide this field when update_mask contains config or one of its
+                      subpaths
+                    properties:
+                      includeToolSelectors:
+                        description: |-
+                          Tool names or prefix patterns to expose from the MCP server. Use exact
+                          tool names or prefix patterns such as read_*. An empty list exposes all
+                          tools. At most 1,024 selectors are allowed, and each selector can contain
+                          at most 256 characters
+                        items:
+                          type: string
+                        type: array
+                      rateLimits:
+                        description: |-
+                          Rate limits for tool invocations. Supported scopes are user, group, service
+                          principal, the service as a whole, and each user by default. Request and
+                          token limits are supported. Empty when no rate limit is configured
+                        items:
+                          properties:
+                            key:
+                              description: |-
+                                Scope of the rate limit. Depending on this value, the limit applies to a
+                                principal, the service as a whole, or each user by default. Possible values are: RATE_LIMIT_KEY_SERVICE, RATE_LIMIT_KEY_SERVICE_PRINCIPAL, RATE_LIMIT_KEY_USER, RATE_LIMIT_KEY_USER_DEFAULT, RATE_LIMIT_KEY_USER_GROUP
+                              type: string
+                            principal:
+                              description: |-
+                                Principal this limit applies to: user email, group name, or service
+                                principal application ID. Required when key applies to a user, group, or
+                                service principal; otherwise it must be unset
+                              type: string
+                            renewalPeriod:
+                              description: 'Renewal period. Possible values are: RATE_LIMIT_RENEWAL_PERIOD_HOUR,
+                                RATE_LIMIT_RENEWAL_PERIOD_MINUTE'
+                              type: string
+                            requests:
+                              description: |-
+                                Maximum requests allowed in one renewal period. Leave unset for no request
+                                limit. Set to 0 to deny all requests
+                              type: number
+                            tokens:
+                              description: |-
+                                Maximum tokens allowed in one renewal period. Leave unset for no token
+                                limit. Set to 0 to deny all requests
+                              type: number
+                          type: object
+                        type: array
+                      sourceConnection:
+                        description: Unity Catalog connection referencing the MCP
+                          server. Required on Create
+                        properties:
+                          isDeleted:
+                            description: |-
+                              Whether the referenced connection has been deleted. The MCP service keeps
+                              the reference so callers can identify the broken dependency; tool
+                              invocation fails until the source connection is updated
+                            type: boolean
+                          name:
+                            description: |-
+                              Resource name of the Unity Catalog connection used to access the MCP
+                              server, in the form connections/{catalog}.{schema}.{connection}
+                            type: string
+                        type: object
+                    type: object
+                  createTime:
+                    description: Time the MCP service was created
+                    type: string
+                  createdBy:
+                    description: Creator identity
+                    type: string
+                  effectiveOwner:
+                    description: Owner of the MCP service
+                    type: string
+                  etag:
+                    description: |-
+                      Optimistic concurrency token returned on every read. To make an Update or
+                      Delete conditional, pass the last-read value in that request's etag
+                      field. In REST responses, this value is a base64 string; URL-encode it when
+                      setting the etag query parameter
+                    type: string
+                  id:
+                    type: string
+                  mcpServiceId:
+                    description: Name for the MCP service, e.g. "my_mcp_service"
+                    type: string
+                  metastoreId:
+                    description: Metastore hosting the MCP service
+                    type: string
+                  name:
+                    description: |-
+                      Resource name of the Unity Catalog connection used to access the MCP
+                      server, in the form connections/{catalog}.{schema}.{connection}
+                    type: string
+                  parent:
+                    description: |-
+                      Name of the parent schema.
+                      Format: schemas/{catalog}.{schema}.
+                      Each {...} component is capped at 255 characters individually
+                    type: string
+                  providerConfig:
+                    description: Configure the provider for management through account
+                      provider.
+                    properties:
+                      workspaceId:
+                        description: Workspace ID which the resource belongs to. This
+                          workspace must be part of the account which the provider
+                          is configured with.
+                        type: string
+                    type: object
+                  updateTime:
+                    description: Time the MCP service was last modified
+                    type: string
+                  updatedBy:
+                    description: Identity of the last updater
+                    type: string
+                type: object
+              conditions:
+                description: Conditions of the resource.
+                items:
+                  description: A Condition that may apply to a resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        LastTransitionTime is the last time this condition transitioned from one
+                        status to another.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        A Message containing details about this condition's last transition from
+                        one status to another, if any.
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        ObservedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      type: integer
+                    reason:
+                      description: A Reason for this condition's last transition from
+                        one status to another.
+                      type: string
+                    status:
+                      description: Status of this condition; is it currently True,
+                        False, or Unknown?
+                      type: string
+                    type:
+                      description: |-
+                        Type of this condition. At most one of each condition type may apply to
+                        a resource at any point in time.
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
+              lastHandledReconcileAt:
+                description: |-
+                  LastHandledReconcileAt holds the value of the most recent
+                  reconcile-requested-at annotation token that the controller has
+                  processed. Users can compare this to the annotation to determine
+                  whether a reconcile request has been handled.
+                type: string
+              observedGeneration:
+                description: |-
+                  ObservedGeneration is the latest metadata.generation
+                  which resulted in either a ready state, or stalled due to error
+                  it can not recover from without human intervention.
+                format: int64
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

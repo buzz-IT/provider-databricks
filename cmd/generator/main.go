@@ -1,0 +1,56 @@
+/*
+Copyright 2021 Upbound Inc.
+*/
+
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/alecthomas/kingpin/v2"
+	"github.com/crossplane/upjet/v2/pkg/examples/conversion"
+	"github.com/crossplane/upjet/v2/pkg/pipeline"
+	"github.com/databricks/terraform-provider-databricks/xpprovider"
+
+	"github.com/buzz-IT/provider-databricks/config"
+)
+
+func main() {
+	if len(os.Args) < 2 || os.Args[1] == "" {
+		panic("root directory is required to be given as argument")
+	}
+	rootDir := os.Args[1]
+	absRootDir, err := filepath.Abs(rootDir)
+	if err != nil {
+		panic(fmt.Sprintf("cannot calculate the absolute path with %s", rootDir))
+	}
+
+	ctx := context.Background()
+	fwProvider, sdkProvider, err := xpprovider.GetProvider(ctx)
+	kingpin.FatalIfError(err, "Cannot get the Terraform provider")
+
+	// Pass 1: generate legacy APIs so v1alpha1 keeps the original
+	// singleton-list (array) schema shape.
+	pcAlpha, err := config.GetProviderV1Alpha1Legacy(context.Background(), fwProvider, sdkProvider, true)
+	kingpin.FatalIfError(err, "Cannot initialize the cluster-scoped legacy v1alpha1 provider configuration")
+
+	pnsAlpha, err := config.GetProviderNamespacedV1Alpha1Legacy(context.Background(), fwProvider, sdkProvider, true)
+	kingpin.FatalIfError(err, "Cannot initialize the namespaced legacy v1alpha1 provider configuration")
+
+	pipeline.Run(pcAlpha, pnsAlpha, absRootDir)
+
+	// Pass 2: generate latest APIs with embedded-object singleton conversion.
+	pc, err := config.GetProvider(context.Background(), fwProvider, sdkProvider, true)
+	kingpin.FatalIfError(err, "Cannot initialize the cluster-scoped provider configuration")
+
+	pns, err := config.GetProviderNamespaced(context.Background(), fwProvider, sdkProvider, true)
+	kingpin.FatalIfError(err, "Cannot initialize the namespaced provider configuration")
+
+	pipeline.Run(pc, pns, absRootDir)
+
+	kingpin.FatalIfError(conversion.ApplyAPIConverters(pc, "../examples-generated/cluster", "../hack/boilerplate.yaml.txt"), "Cannot convert singleton lists to embedded objects in example cluster-scoped resource manifests.")
+	kingpin.FatalIfError(conversion.ApplyAPIConverters(pns, "../examples-generated/namespaced", "../hack/boilerplate.yaml.txt"), "Cannot convert singleton lists to embedded objects in example namespace-scoped resource manifests.")
+}

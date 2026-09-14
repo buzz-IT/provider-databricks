@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 The Crossplane Authors <https://crossplane.io>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+apiVersion: compute.databricks.crossplane.io/v1beta1
+kind: Cluster
+metadata:
+  annotations:
+    meta.upbound.io/example-id: compute/v1beta1/cluster
+  labels:
+    testing.upbound.io/example-name: shared_autoscaling
+  name: e2e-cluster-cluster-001
+spec:
+  forProvider:
+    autoscale:
+      maxWorkers: 2
+      minWorkers: 1
+    autoterminationMinutes: 20
+    clusterName: "Crossplane E2E Cluster 001"
+    nodeTypeId: "Standard_D3_v2" # Azure VM type, see https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+    sparkVersion: "18.x-scala2.13" # Databricks Runtime version, see https://docs.databricks.com/runtime/releases.html

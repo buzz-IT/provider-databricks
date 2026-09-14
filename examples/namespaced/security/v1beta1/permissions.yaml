@@ -1,0 +1,97 @@
+# SPDX-FileCopyrightText: 2026 The Crossplane Authors <https://crossplane.io>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+apiVersion: security.databricks.m.crossplane.io/v1beta1
+kind: Permissions
+metadata:
+  annotations:
+    meta.upbound.io/example-id: security/v1beta1/permissions
+  labels:
+    testing.upbound.io/example-name: e2e-namespaced-cluster-security-cluster-usage
+  name: e2e-namespaced-cluster-security-cluster-usage-001
+  namespace: upbound-system
+spec:
+  forProvider:
+    accessControl:
+    - groupNameSelector:
+        matchLabels:
+          testing.upbound.io/example-name: e2e-group-auto
+      permissionLevel: CAN_ATTACH_TO
+    - groupNameSelector:
+        matchLabels:
+          testing.upbound.io/example-name: e2e-group-eng
+      permissionLevel: CAN_RESTART
+    - groupNameSelector:
+        matchLabels:
+          testing.upbound.io/example-name: e2e-group-ds
+      permissionLevel: CAN_MANAGE
+    clusterIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: e2e-namespaced-cluster-security
+
+---
+
+apiVersion: compute.databricks.m.crossplane.io/v1beta1
+kind: Cluster
+metadata:
+  annotations:
+    meta.upbound.io/example-id: security/v1beta1/permissions
+  labels:
+    testing.upbound.io/example-name: e2e-namespaced-cluster-security
+  name: e2e-namespaced-cluster-002
+  namespace: upbound-system
+spec:
+  forProvider:
+    autoscale:
+      maxWorkers: 1
+      minWorkers: 1
+    autoterminationMinutes: 20
+    clusterName: "Crossplane E2E Namespaced 002"
+    nodeTypeId: "Standard_D3_v2" # Azure VM type, see https://docs.microsoft.com/en-us/azure/virtual-machines/sizes
+    sparkVersion: "18.x-scala2.13" # Databricks Runtime version, see https://docs.databricks.com/runtime/releases.html
+
+---
+
+apiVersion: security.databricks.m.crossplane.io/v1beta1
+kind: Group
+metadata:
+  annotations:
+    meta.upbound.io/example-id: security/v1beta1/permissions
+  labels:
+    testing.upbound.io/example-name: e2e-group-auto
+  name: e2e-group-auto
+  namespace: upbound-system
+spec:
+  forProvider:
+    displayName: E2E Automation
+
+---
+
+apiVersion: security.databricks.m.crossplane.io/v1beta1
+kind: Group
+metadata:
+  annotations:
+    meta.upbound.io/example-id: security/v1beta1/permissions
+  labels:
+    testing.upbound.io/example-name: e2e-group-ds
+  name: e2e-group-ds
+  namespace: upbound-system
+spec:
+  forProvider:
+    displayName: E2EData Science
+
+---
+
+apiVersion: security.databricks.m.crossplane.io/v1beta1
+kind: Group
+metadata:
+  annotations:
+    meta.upbound.io/example-id: security/v1beta1/permissions
+  labels:
+    testing.upbound.io/example-name: e2e-group-eng
+  name: e2e-group-eng
+  namespace: upbound-system
+spec:
+  forProvider:
+    displayName: E2E Engineering

@@ -1,0 +1,20 @@
+name: Releases
+
+on: 
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v5
+    - run: ./hack/merge-crds.sh
+    - uses: ncipollo/release-action@v1
+      with:
+        allowUpdates: true
+        artifacts: "dist/*"
+        body: "See https://github.com/buzz-IT/provider-databricks/pkgs/container/provider-databricks for OCI images."

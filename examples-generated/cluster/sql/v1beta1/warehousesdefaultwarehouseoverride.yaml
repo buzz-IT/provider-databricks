@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 The Crossplane Authors <https://crossplane.io>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+apiVersion: sql.databricks.crossplane.io/v1beta1
+kind: WarehousesDefaultWarehouseOverride
+metadata:
+  annotations:
+    meta.upbound.io/example-id: sql/v1beta1/warehousesdefaultwarehouseoverride
+  labels:
+    testing.upbound.io/example-name: last_selected
+  name: last-selected
+spec:
+  forProvider:
+    defaultWarehouseOverrideId: ${data.databricks_user.example.id}
+    type: LAST_SELECTED

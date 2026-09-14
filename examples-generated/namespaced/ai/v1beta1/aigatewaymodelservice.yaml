@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 The Crossplane Authors <https://crossplane.io>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+apiVersion: ai.databricks.m.crossplane.io/v1beta1
+kind: AIGatewayModelService
+metadata:
+  annotations:
+    meta.upbound.io/example-id: ai/v1beta1/aigatewaymodelservice
+  labels:
+    testing.upbound.io/example-name: example
+  name: example
+  namespace: upbound-system
+spec:
+  forProvider:
+    comment: Routes customer support requests
+    config:
+      routing:
+        destinations:
+        - destinationType: DESTINATION_TYPE_PAY_PER_TOKEN_FOUNDATION_MODEL
+          name: primary
+          payPerTokenConfig:
+            model: models/system.ai.databricks-gpt-5
+          trafficPercentage: 100
+    modelServiceId: customer_support
+    parent: schemas/main.default
