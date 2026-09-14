@@ -4,7 +4,9 @@ set -uo pipefail
 KUBECTL="${KUBECTL:-kubectl}"
 
 echo "=== managed resources ==="
-${KUBECTL} get catalog,schema,secretscope,directory -A || true
+${KUBECTL} get catalog,schema,secretscope,directory -A -o wide || true
+${KUBECTL} get catalog.unity.databricks.crossplane.io -o yaml || true
+${KUBECTL} get events -A --field-selector involvedObject.kind=Catalog || true
 
 echo "=== catalog describe ==="
 ${KUBECTL} describe catalog.unity.databricks.crossplane.io -A || true
