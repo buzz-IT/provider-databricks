@@ -73,9 +73,7 @@ func Test_msiAuth(t *testing.T) {
 	}
 	ps := &terraform.Setup{Configuration: terraform.ProviderConfiguration{}}
 
-	if err := msiAuth(pcSpec, ps); err != nil {
-		t.Fatalf("msiAuth() returned unexpected error: %v", err)
-	}
+	msiAuth(pcSpec, ps)
 
 	want := terraform.ProviderConfiguration{
 		keyAzureUseMsi:              true,

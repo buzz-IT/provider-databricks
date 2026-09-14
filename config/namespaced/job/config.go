@@ -8,68 +8,25 @@ func Configure(p *config.Provider) {
 		r.ShortGroup = "compute"
 		r.LateInitializer.IgnoredFields = append(r.LateInitializer.IgnoredFields, "format")
 
-		r.References["notebook_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
-		}
-
-		r.References["dbt_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
-		}
-
-		r.References["sql_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
-		}
-
-		r.References["task.sql_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
-		}
-
-		r.References["dashboard_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
-		}
-
-		r.References["power_bi_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
-		}
-
-		r.References["task.notebook_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
-		}
-
-		r.References["task.dbt_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
-		}
-
-		r.References["task.sql_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
-		}
-
-		r.References["task.dashboard_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
-		}
-
-		r.References["task.power_bi_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
-		}
-
-		r.References["for_each_task.task.notebook_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
-		}
-
-		r.References["for_each_task.task.dbt_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
-		}
-
-		r.References["for_each_task.task.sql_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
-		}
-
-		r.References["for_each_task.task.dashboard_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
-		}
-
-		r.References["for_each_task.task.power_bi_task.warehouse_id"] = config.Reference{
-			TerraformName: "databricks_sql_endpoint",
+		sqlEndpoint := config.Reference{TerraformName: "databricks_sql_endpoint"}
+		for _, path := range []string{
+			"notebook_task.warehouse_id",
+			"dbt_task.warehouse_id",
+			"sql_task.warehouse_id",
+			"task.sql_task.warehouse_id",
+			"dashboard_task.warehouse_id",
+			"power_bi_task.warehouse_id",
+			"task.notebook_task.warehouse_id",
+			"task.dbt_task.warehouse_id",
+			"task.dashboard_task.warehouse_id",
+			"task.power_bi_task.warehouse_id",
+			"for_each_task.task.notebook_task.warehouse_id",
+			"for_each_task.task.dbt_task.warehouse_id",
+			"for_each_task.task.sql_task.warehouse_id",
+			"for_each_task.task.dashboard_task.warehouse_id",
+			"for_each_task.task.power_bi_task.warehouse_id",
+		} {
+			r.References[path] = sqlEndpoint
 		}
 	})
 }

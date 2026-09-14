@@ -49,6 +49,14 @@ func main() {
 }
 
 func walkPackages(root string) error {
+	byDir, err := collectTerraformedTypes(root)
+	if err != nil {
+		return err
+	}
+	return writeShims(byDir)
+}
+
+func collectTerraformedTypes(root string) (map[string]map[string]struct{}, error) {
 	byDir := map[string]map[string]struct{}{}
 	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
@@ -70,9 +78,10 @@ func walkPackages(root string) error {
 		}
 		return nil
 	})
-	if err != nil {
-		return err
-	}
+	return byDir, err
+}
+
+func writeShims(byDir map[string]map[string]struct{}) error {
 	dirs := make([]string, 0, len(byDir))
 	for dir := range byDir {
 		dirs = append(dirs, dir)

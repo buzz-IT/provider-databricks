@@ -82,7 +82,7 @@ func TerraformSetupBuilder(tfProvider *schema.Provider) terraform.SetupFn { //no
 
 		switch pcSpec.Credentials.Source { //nolint:exhaustive
 		case credentialsSourceSystemAssignedManagedIdentity, credentialsSourceUserAssignedManagedIdentity:
-			err = msiAuth(pcSpec, &ps)
+			msiAuth(pcSpec, &ps)
 		case credentialsSourceOIDCTokenFile:
 			err = oidcAuth(pcSpec, &ps)
 		case credentialsSourceUpbound:
@@ -160,29 +160,24 @@ func defaultAuth(ctx context.Context, pcSpec *namespacedv1beta1.ProviderConfigSp
 	return nil
 }
 
-func applyAzureCommon(pcSpec *namespacedv1beta1.ProviderConfigSpec, ps *terraform.Setup) {
-	if pcSpec.Host != nil && len(*pcSpec.Host) > 0 {
-		ps.Configuration[keyHost] = *pcSpec.Host
-	}
-	if pcSpec.AzureWorkspaceResourceID != nil && len(*pcSpec.AzureWorkspaceResourceID) > 0 {
-		ps.Configuration[keyAzureWorkspaceResourceID] = *pcSpec.AzureWorkspaceResourceID
-	}
-	if pcSpec.ClientID != nil && len(*pcSpec.ClientID) > 0 {
-		ps.Configuration[keyAzureClientID] = *pcSpec.ClientID
-	}
-	if pcSpec.TenantID != nil && len(*pcSpec.TenantID) > 0 {
-		ps.Configuration[keyAzureTenantID] = *pcSpec.TenantID
-	}
-	if pcSpec.Environment != nil && len(*pcSpec.Environment) > 0 {
-		ps.Configuration[keyAzureEnvironment] = *pcSpec.Environment
+func setCfgString(ps *terraform.Setup, key string, v *string) {
+	if v != nil && *v != "" {
+		ps.Configuration[key] = *v
 	}
 }
 
-func msiAuth(pcSpec *namespacedv1beta1.ProviderConfigSpec, ps *terraform.Setup) error {
+func applyAzureCommon(pcSpec *namespacedv1beta1.ProviderConfigSpec, ps *terraform.Setup) {
+	setCfgString(ps, keyHost, pcSpec.Host)
+	setCfgString(ps, keyAzureWorkspaceResourceID, pcSpec.AzureWorkspaceResourceID)
+	setCfgString(ps, keyAzureClientID, pcSpec.ClientID)
+	setCfgString(ps, keyAzureTenantID, pcSpec.TenantID)
+	setCfgString(ps, keyAzureEnvironment, pcSpec.Environment)
+}
+
+func msiAuth(pcSpec *namespacedv1beta1.ProviderConfigSpec, ps *terraform.Setup) {
 	ps.Configuration[keyAzureUseMsi] = true
 	ps.Configuration[keyAuthType] = "azure-msi"
 	applyAzureCommon(pcSpec, ps)
-	return nil
 }
 
 func oidcTokenFilePath(pcSpec *namespacedv1beta1.ProviderConfigSpec) string {
