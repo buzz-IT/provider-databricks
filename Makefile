@@ -64,7 +64,10 @@ GO_SUBDIRS += cmd internal apis config
 KIND_VERSION = v0.33.0
 UPTEST_VERSION = v2.2.0
 CRDDIFF_VERSION = v0.12.1
-CROSSPLANE_CLI_VERSION = v2.4.0
+# CLI v2.4+ is published at cli.crossplane.io (binary name "crossplane"), not
+# releases.crossplane.io/crank. The build submodule still downloads crank from
+# releases.crossplane.io, so keep the last version that exists there.
+CROSSPLANE_CLI_VERSION = v2.3.4
 # for e2e testing
 CROSSPLANE_VERSION = 2.4.0
 -include build/makelib/k8s_tools.mk
@@ -134,7 +137,7 @@ $(TF_PROVIDER_MODULE):
 		rm -rf $(TF_PROVIDER_MODULE); \
 		git clone -c advice.detachedHead=false --depth 1 --branch "v$(TERRAFORM_PROVIDER_VERSION)" "$(TERRAFORM_PROVIDER_REPO)" $(TF_PROVIDER_MODULE); \
 		mkdir -p $(TF_PROVIDER_MODULE)/xpprovider; \
-		cp hack/xpprovider/xpprovider.go $(TF_PROVIDER_MODULE)/xpprovider/xpprovider.go; \
+		cp hack/xpprovider.go.src $(TF_PROVIDER_MODULE)/xpprovider/xpprovider.go; \
 		$(OK) prepared terraform-provider-databricks v$(TERRAFORM_PROVIDER_VERSION); \
 	fi
 

@@ -104,6 +104,8 @@ linters:
       - third_party$
       - builtin$
       - examples$
+      - hack$
+      - hack/
 issues:
   max-same-issues: 0
   new: false
@@ -124,3 +126,5 @@ formatters:
       - third_party$
       - builtin$
       - examples$
+      - hack$
+      - hack/
