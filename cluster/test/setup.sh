@@ -72,5 +72,6 @@ spec:
     source: Secret
     secretRef:
       name: provider-secret
+      namespace: ${TEST_NAMESPACE}
       key: credentials
 EOF

@@ -12,4 +12,5 @@ spec:
     secretRef:
       key: credentials
       name: provider-secret
+      namespace: upbound-system
     source: Secret
