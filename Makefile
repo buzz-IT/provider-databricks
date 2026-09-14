@@ -20,11 +20,13 @@ export TERRAFORM_DOCS_PATH ?= docs/resources
 
 
 # Default e2e suite: cheap workspace resources (no compute / Unity Catalog).
-# Override with UPTEST_EXAMPLE_LIST. Optional suites:
+# Override with UPTEST_EXAMPLE_LIST. Empty env values (GitHub Actions) still
+# use this default. Optional suites:
 #   examples/e2e/cluster/group.yaml,examples/e2e/namespaced/group.yaml
 #   examples/e2e/cluster/catalog.yaml,examples/e2e/namespaced/catalog.yaml
 #   examples/e2e/cluster/cluster.yaml,examples/e2e/namespaced/cluster.yaml
-UPTEST_EXAMPLE_LIST ?= examples/e2e/cluster/secretscope.yaml,examples/e2e/cluster/directory.yaml,examples/e2e/namespaced/secretscope.yaml,examples/e2e/namespaced/directory.yaml
+DEFAULT_UPTEST_EXAMPLE_LIST := examples/e2e/cluster/secretscope.yaml,examples/e2e/cluster/directory.yaml,examples/e2e/namespaced/secretscope.yaml,examples/e2e/namespaced/directory.yaml
+override UPTEST_EXAMPLE_LIST := $(if $(strip $(UPTEST_EXAMPLE_LIST)),$(UPTEST_EXAMPLE_LIST),$(DEFAULT_UPTEST_EXAMPLE_LIST))
 
 PLATFORMS ?= linux_amd64 linux_arm64
 
