@@ -163,18 +163,18 @@ Create a managed resource to verify the `provider-databricks` is functioning.
 This example creates a Databricks Cluster resource in the Workspace.
 
 ```yaml
-apiVersion: compute.databricks.crossplane.io/v1alpha1
+apiVersion: compute.databricks.crossplane.io/v1beta1
 kind: Cluster
 metadata:
   annotations:
-    meta.upbound.io/example-id: compute/v1alpha1/cluster
+    meta.upbound.io/example-id: compute/v1beta1/cluster
   labels:
     testing.upbound.io/example-name: shared_autoscaling
   name: shared-autoscaling-test
 spec:
   forProvider:
     autoscale:
-    - maxWorkers: 2
+      maxWorkers: 2
       minWorkers: 1
     autoterminationMinutes: 20
     nodeTypeId: Standard_D4plds_v6

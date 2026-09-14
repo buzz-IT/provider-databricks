@@ -10,4 +10,7 @@ package v1beta1
 func (tr *DatabaseDatabaseCatalog) Hub() {}
 
 // Hub marks this type as a conversion hub.
+func (tr *DatabaseInstance) Hub() {}
+
+// Hub marks this type as a conversion hub.
 func (tr *DatabaseSyncedDatabaseTable) Hub() {}

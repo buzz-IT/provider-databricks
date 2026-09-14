@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2026 The Crossplane Authors <https://crossplane.io>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+apiVersion: ai.databricks.m.crossplane.io/v1beta1
+kind: AIGatewayModelProviderService
+metadata:
+  annotations:
+    meta.upbound.io/example-id: ai/v1beta1/aigatewaymodelproviderservice
+  labels:
+    testing.upbound.io/example-name: example
+  name: example
+  namespace: upbound-system
+spec:
+  forProvider:
+    comment: Connects to a custom model provider
+    config:
+      custom:
+        direct:
+          apiKey:
+            plaintext: ${var.provider_api_key}
+          baseUrl: https://api.example.com/v1
+      providerType: EXTERNAL_MODEL_PROVIDER_TYPE_CUSTOM
+      targets:
+      - model: chat-model
+        nativeApiTypes:
+        - openai/v1/chat/completions
+    modelProviderServiceId: custom_provider
+    parent: schemas/main.default

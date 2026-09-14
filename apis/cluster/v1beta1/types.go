@@ -15,33 +15,31 @@ type ProviderConfigSpec struct {
 	// Credentials required to authenticate to this provider.
 	Credentials ProviderCredentials `json:"credentials"`
 
-	// ClientID is the user-assigned managed identity's ID
-	// when Credentials.Source is UserAssignedManagedIdentity.
+	// Host is the Databricks workspace or account URL
+	// (for example https://adb-xxxx.azuredatabricks.net).
+	// +optional
+	Host *string `json:"host,omitempty"`
+
+	// ClientID is the Azure AD application / user-assigned managed identity ID
+	// when Credentials.Source is UserAssignedManagedIdentity, OIDCTokenFile, or Upbound.
 	// +optional
 	ClientID *string `json:"clientID,omitempty"`
 
-	// SubscriptionID is the Azure subscription ID to be used.
-	// Required if Credentials.Source is a managed identity or OIDC source.
-	// +optional
-	SubscriptionID *string `json:"subscriptionID,omitempty"`
-
-	// TenantID is the Azure AD tenant ID to be used.
-	// Required if Credentials.Source is a managed identity or OIDC source.
+	// TenantID is the Azure AD tenant ID used with MSI or OIDC.
 	// +optional
 	TenantID *string `json:"tenantID,omitempty"`
 
-	// MSIEndpoint is the optional path to a custom endpoint for
-	// Managed Service Identity.
+	// AzureWorkspaceResourceID is the Azure resource ID of the Databricks workspace.
 	// +optional
-	MSIEndpoint *string `json:"msiEndpoint,omitempty"`
+	AzureWorkspaceResourceID *string `json:"azureWorkspaceResourceID,omitempty"`
 
-	// The Cloud Environment which should be used. Possible values are "public",
+	// The Azure cloud environment. Possible values are "public",
 	// "usgovernment", "german", and "china". Defaults to "public".
 	// +optional
 	Environment *string `json:"environment,omitempty"`
 
-	// OIDCTokenFilePath is the optional path to a token file
-	// that allows to access a managed identity.
+	// OIDCTokenFilePath is the path to a projected OIDC token file
+	// (Workload Identity / GitHub / Upbound).
 	// +optional
 	OidcTokenFilePath *string `json:"oidcTokenFilePath,omitempty"`
 }
@@ -93,7 +91,6 @@ type ProviderConfigList struct {
 // +kubebuilder:printcolumn:name="CONFIG-NAME",type="string",JSONPath=".providerConfigRef.name"
 // +kubebuilder:printcolumn:name="RESOURCE-KIND",type="string",JSONPath=".resourceRef.kind"
 // +kubebuilder:printcolumn:name="RESOURCE-NAME",type="string",JSONPath=".resourceRef.name"
-// Please replace `PROVIDER-NAME` with your actual provider name, like `aws`, `azure`, `gcp`, `alibaba`
 // +kubebuilder:resource:scope=Cluster,categories={crossplane,providerconfig,databricks}
 // +kubebuilder:storageversion
 type ProviderConfigUsage struct {

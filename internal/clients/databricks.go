@@ -32,8 +32,7 @@ const (
 	errTrackUsage           = "cannot track ProviderConfig usage"
 	errExtractCredentials   = "cannot extract credentials"
 	errUnmarshalCredentials = "cannot unmarshal databricks credentials as JSON"
-	errSubscriptionIDNotSet = "subscription ID must be set in ProviderConfig when credential source is InjectedIdentity, OIDCTokenFile or Upbound"
-	errTenantIDNotSet       = "tenant ID must be set in ProviderConfig when credential source is InjectedIdentity, OIDCTokenFile or Upbound"
+	errTenantIDNotSet       = "tenant ID must be set in ProviderConfig when credential source is OIDCTokenFile or Upbound"
 	errClientIDNotSet       = "client ID must be set in ProviderConfig when credential source is OIDCTokenFile or Upbound"
 
 	keyHost                     = "host"
@@ -44,22 +43,16 @@ const (
 	keyAzureClientSecret        = "azure_client_secret"
 	keyAzureTenantID            = "azure_tenant_id"
 	keyAzureEnvironment         = "azure_environment"
-	keySubscriptionID           = "subscription_id"
 	keyClientID                 = "client_id"
 	keyClientSecret             = "client_secret"
 	keyAccountID                = "account_id"
 	keyAuthType                 = "auth_type"
 	keyAuthToken                = "token"
-	keyOidcTokenFilePath        = "oidc_token_file_path"
-	keyUseOIDC                  = "use_oidc"
-	keyTenantID                 = "tenant_id"
-	keyMSIEndpoint              = "msi_endpoint"
-	keyUseMSI                   = "use_msi"
+	keyDatabricksIDTokenFile    = "databricks_id_token_filepath"
 	keyGoogleCredentials        = "google_credentials"
 	keyGoogleServiceAccount     = "google_service_account"
-	// Default OidcTokenFilePath
-	defaultOidcTokenFilePath = "/var/run/secrets/azure/tokens/azure-identity-token"
 
+	defaultOidcTokenFilePath   = "/var/run/secrets/azure/tokens/azure-identity-token"
 	envAzureFederatedTokenFile = "AZURE_FEDERATED_TOKEN_FILE"
 )
 
@@ -151,12 +144,6 @@ func defaultAuth(ctx context.Context, pcSpec *namespacedv1beta1.ProviderConfigSp
 	if v, ok := creds[keyAccountID]; ok {
 		ps.Configuration[keyAccountID] = v
 	}
-	if v, ok := creds[keySubscriptionID]; ok {
-		ps.Configuration[keySubscriptionID] = v
-	}
-	if v, ok := creds[keyTenantID]; ok {
-		ps.Configuration[keyTenantID] = v
-	}
 	if v, ok := creds[keyEnvironment]; ok {
 		ps.Configuration[keyEnvironment] = v
 	}
@@ -173,77 +160,64 @@ func defaultAuth(ctx context.Context, pcSpec *namespacedv1beta1.ProviderConfigSp
 	return nil
 }
 
+func applyAzureCommon(pcSpec *namespacedv1beta1.ProviderConfigSpec, ps *terraform.Setup) {
+	if pcSpec.Host != nil && len(*pcSpec.Host) > 0 {
+		ps.Configuration[keyHost] = *pcSpec.Host
+	}
+	if pcSpec.AzureWorkspaceResourceID != nil && len(*pcSpec.AzureWorkspaceResourceID) > 0 {
+		ps.Configuration[keyAzureWorkspaceResourceID] = *pcSpec.AzureWorkspaceResourceID
+	}
+	if pcSpec.ClientID != nil && len(*pcSpec.ClientID) > 0 {
+		ps.Configuration[keyAzureClientID] = *pcSpec.ClientID
+	}
+	if pcSpec.TenantID != nil && len(*pcSpec.TenantID) > 0 {
+		ps.Configuration[keyAzureTenantID] = *pcSpec.TenantID
+	}
+	if pcSpec.Environment != nil && len(*pcSpec.Environment) > 0 {
+		ps.Configuration[keyAzureEnvironment] = *pcSpec.Environment
+	}
+}
+
 func msiAuth(pcSpec *namespacedv1beta1.ProviderConfigSpec, ps *terraform.Setup) error {
-	if pcSpec.SubscriptionID == nil || len(*pcSpec.SubscriptionID) == 0 {
-		return errors.New(errSubscriptionIDNotSet)
-	}
-	if pcSpec.TenantID == nil || len(*pcSpec.TenantID) == 0 {
-		return errors.New(errTenantIDNotSet)
-	}
-	ps.Configuration[keySubscriptionID] = *pcSpec.SubscriptionID
-	ps.Configuration[keyTenantID] = *pcSpec.TenantID
-	ps.Configuration[keyUseMSI] = "true"
-	if pcSpec.MSIEndpoint != nil {
-		ps.Configuration[keyMSIEndpoint] = *pcSpec.MSIEndpoint
-	}
-	if pcSpec.ClientID != nil {
-		ps.Configuration[keyClientID] = *pcSpec.ClientID
-	}
-	if pcSpec.Environment != nil {
-		ps.Configuration[keyEnvironment] = *pcSpec.Environment
-	}
+	ps.Configuration[keyAzureUseMsi] = true
+	ps.Configuration[keyAuthType] = "azure-msi"
+	applyAzureCommon(pcSpec, ps)
 	return nil
 }
 
-func oidcAuth(pcSpec *namespacedv1beta1.ProviderConfigSpec, ps *terraform.Setup) error {
-	if pcSpec.SubscriptionID == nil || len(*pcSpec.SubscriptionID) == 0 {
-		return errors.New(errSubscriptionIDNotSet)
+func oidcTokenFilePath(pcSpec *namespacedv1beta1.ProviderConfigSpec) string {
+	if pcSpec.OidcTokenFilePath != nil && len(*pcSpec.OidcTokenFilePath) > 0 {
+		return *pcSpec.OidcTokenFilePath
 	}
+	if tokenFile := os.Getenv(envAzureFederatedTokenFile); tokenFile != "" {
+		return tokenFile
+	}
+	return defaultOidcTokenFilePath
+}
+
+func oidcAuth(pcSpec *namespacedv1beta1.ProviderConfigSpec, ps *terraform.Setup) error {
 	if pcSpec.TenantID == nil || len(*pcSpec.TenantID) == 0 {
 		return errors.New(errTenantIDNotSet)
 	}
 	if pcSpec.ClientID == nil || len(*pcSpec.ClientID) == 0 {
 		return errors.New(errClientIDNotSet)
 	}
-	// OIDC Token File Path: an explicit oidcTokenFilePath always wins. Otherwise
-	// prefer AZURE_FEDERATED_TOKEN_FILE, which the azure workload identity webhook
-	// sets to wherever it actually projected the token, falling back to the
-	// historical hardcoded default only if that env var isn't set.
-	ps.Configuration[keyOidcTokenFilePath] = defaultOidcTokenFilePath
-	if tokenFile := os.Getenv(envAzureFederatedTokenFile); tokenFile != "" {
-		ps.Configuration[keyOidcTokenFilePath] = tokenFile
-	}
-	if pcSpec.OidcTokenFilePath != nil {
-		ps.Configuration[keyOidcTokenFilePath] = *pcSpec.OidcTokenFilePath
-	}
-	ps.Configuration[keySubscriptionID] = *pcSpec.SubscriptionID
-	ps.Configuration[keyTenantID] = *pcSpec.TenantID
-	ps.Configuration[keyClientID] = *pcSpec.ClientID
-	ps.Configuration[keyUseOIDC] = "true"
-	if pcSpec.Environment != nil {
-		ps.Configuration[keyEnvironment] = *pcSpec.Environment
-	}
+	ps.Configuration[keyAuthType] = "github-oidc-azure"
+	ps.Configuration[keyDatabricksIDTokenFile] = oidcTokenFilePath(pcSpec)
+	applyAzureCommon(pcSpec, ps)
 	return nil
 }
 
 func upboundAuth(pcSpec *namespacedv1beta1.ProviderConfigSpec, ps *terraform.Setup) error {
-	if pcSpec.SubscriptionID == nil || len(*pcSpec.SubscriptionID) == 0 {
-		return errors.New(errSubscriptionIDNotSet)
-	}
 	if pcSpec.TenantID == nil || len(*pcSpec.TenantID) == 0 {
 		return errors.New(errTenantIDNotSet)
 	}
 	if pcSpec.ClientID == nil || len(*pcSpec.ClientID) == 0 {
 		return errors.New(errClientIDNotSet)
 	}
-	ps.Configuration[keyOidcTokenFilePath] = upboundProviderIdentityTokenFile
-	ps.Configuration[keySubscriptionID] = *pcSpec.SubscriptionID
-	ps.Configuration[keyTenantID] = *pcSpec.TenantID
-	ps.Configuration[keyClientID] = *pcSpec.ClientID
-	ps.Configuration[keyUseOIDC] = "true"
-	if pcSpec.Environment != nil {
-		ps.Configuration[keyEnvironment] = *pcSpec.Environment
-	}
+	ps.Configuration[keyAuthType] = "github-oidc-azure"
+	ps.Configuration[keyDatabricksIDTokenFile] = upboundProviderIdentityTokenFile
+	applyAzureCommon(pcSpec, ps)
 	return nil
 }
 

@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	reConvertTo = regexp.MustCompile(`func \(tr \*([A-Za-z0-9_]+)\) ConvertTo\(`)
+	reTerraformed = regexp.MustCompile(`func \((?:tr|mg) \*([A-Za-z0-9_]+)\) GetTerraformResourceType\(`)
 )
 
 type methodName string
@@ -43,42 +43,55 @@ func main() {
 		panic(fmt.Sprintf("cannot determine absolute path for %q: %v", root, err))
 	}
 
-	if err := walkForConversionSpokes(absRoot); err != nil {
+	if err := walkPackages(absRoot); err != nil {
 		panic(err)
 	}
 }
 
-func walkForConversionSpokes(root string) error {
-	entries, err := os.ReadDir(root)
+func walkPackages(root string) error {
+	byDir := map[string]map[string]struct{}{}
+	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() || !strings.HasSuffix(d.Name(), "_terraformed.go") {
+			return nil
+		}
+		types, err := parseTypesFromFile(path, reTerraformed)
+		if err != nil {
+			return err
+		}
+		dir := filepath.Dir(path)
+		if byDir[dir] == nil {
+			byDir[dir] = map[string]struct{}{}
+		}
+		for _, t := range types {
+			byDir[dir][t] = struct{}{}
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
-	for _, entry := range entries {
-		path := filepath.Join(root, entry.Name())
-		if entry.IsDir() {
-			if err := walkForConversionSpokes(path); err != nil {
-				return err
-			}
-			continue
+	dirs := make([]string, 0, len(byDir))
+	for dir := range byDir {
+		dirs = append(dirs, dir)
+	}
+	sort.Strings(dirs)
+	for _, dir := range dirs {
+		types := make([]string, 0, len(byDir[dir]))
+		for t := range byDir[dir] {
+			types = append(types, t)
 		}
-		if entry.Name() != "zz_generated.conversion_spokes.go" {
-			continue
-		}
-		if err := ensureShim(filepath.Dir(path), path); err != nil {
+		sort.Strings(types)
+		if err := ensureShim(dir, types); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func ensureShim(pkgDir, spokeFile string) error {
-	types, err := parseTypesFromSpokes(spokeFile)
-	if err != nil {
-		return err
-	}
-	if len(types) == 0 {
-		return nil
-	}
+func ensureShim(pkgDir string, types []string) error {
 
 	missingByType := map[string][]methodName{}
 	for _, t := range types {
@@ -105,13 +118,13 @@ func ensureShim(pkgDir, spokeFile string) error {
 	return os.WriteFile(shimPath, []byte(content), 0600)
 }
 
-func parseTypesFromSpokes(path string) ([]string, error) {
+func parseTypesFromFile(path string, re *regexp.Regexp) ([]string, error) {
 	// #nosec G304,G703 -- path is discovered from the checked-in repository tree.
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("read %s: %w", path, err)
 	}
-	matches := reConvertTo.FindAllStringSubmatch(string(b), -1)
+	matches := re.FindAllStringSubmatch(string(b), -1)
 	set := map[string]struct{}{}
 	for _, m := range matches {
 		if len(m) == 2 {

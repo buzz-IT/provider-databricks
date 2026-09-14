@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 The Crossplane Authors <https://crossplane.io>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+apiVersion: mlflow.databricks.m.crossplane.io/v1beta1
+kind: MaterializedFeaturesFeatureTag
+metadata:
+  annotations:
+    meta.upbound.io/example-id: mlflow/v1beta1/materializedfeaturesfeaturetag
+  labels:
+    testing.upbound.io/example-name: example
+  name: example
+  namespace: upbound-system
+spec:
+  forProvider: {}

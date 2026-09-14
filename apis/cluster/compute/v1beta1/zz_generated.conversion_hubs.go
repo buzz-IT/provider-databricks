@@ -7,4 +7,22 @@
 package v1beta1
 
 // Hub marks this type as a conversion hub.
+func (tr *Cluster) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *ClusterPolicy) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *InstancePool) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Job) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Library) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Pipeline) Hub() {}
+
+// Hub marks this type as a conversion hub.
 func (tr *Sandbox) Hub() {}

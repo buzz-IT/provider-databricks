@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 The Crossplane Authors <https://crossplane.io>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+apiVersion: unity.databricks.m.crossplane.io/v1beta1
+kind: Domain
+metadata:
+  annotations:
+    meta.upbound.io/example-id: unity/v1beta1/domain
+  labels:
+    testing.upbound.io/example-name: finance
+  name: finance
+  namespace: upbound-system
+spec:
+  forProvider:
+    description: Curated finance datasets for the analytics org.
+    icon:
+      color: '#1B5E20'
+      name: BANK
+    subtitle: Financial data assets
+    tagKey: finance

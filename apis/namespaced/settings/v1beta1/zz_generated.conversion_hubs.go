@@ -25,6 +25,12 @@ func (tr *AibiDashboardEmbeddingApprovedDomainsSetting) Hub() {}
 func (tr *AutomaticClusterUpdateWorkspaceSetting) Hub() {}
 
 // Hub marks this type as a conversion hub.
+func (tr *ComplianceSecurityProfileWorkspaceSetting) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *DefaultNamespaceSetting) Hub() {}
+
+// Hub marks this type as a conversion hub.
 func (tr *DisableLegacyAccessSetting) Hub() {}
 
 // Hub marks this type as a conversion hub.
@@ -32,6 +38,12 @@ func (tr *DisableLegacyDbfsSetting) Hub() {}
 
 // Hub marks this type as a conversion hub.
 func (tr *DisableLegacyFeaturesSetting) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *EnhancedSecurityMonitoringWorkspaceSetting) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *RestrictWorkspaceAdminsSetting) Hub() {}
 
 // Hub marks this type as a conversion hub.
 func (tr *WorkspaceNetworkOption) Hub() {}

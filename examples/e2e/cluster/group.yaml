@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 The Crossplane Authors <https://crossplane.io>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+apiVersion: security.databricks.crossplane.io/v1beta1
+kind: Group
+metadata:
+  annotations:
+    meta.upbound.io/example-id: e2e/cluster/group
+    uptest.upbound.io/timeout: "1200"
+  labels:
+    testing.upbound.io/example-name: e2e-group
+  name: e2e-group
+spec:
+  forProvider:
+    displayName: ${data.groupDisplayName}-${Rand.RFC1123Subdomain}
+    allowClusterCreate: false
+    allowInstancePoolCreate: false

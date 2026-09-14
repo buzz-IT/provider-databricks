@@ -10,6 +10,9 @@ package v1beta1
 func (tr *Endpoint) Hub() {}
 
 // Hub marks this type as a conversion hub.
+func (tr *ModelServing) Hub() {}
+
+// Hub marks this type as a conversion hub.
 func (tr *ModelServingProvisionedThroughput) Hub() {}
 
 // Hub marks this type as a conversion hub.

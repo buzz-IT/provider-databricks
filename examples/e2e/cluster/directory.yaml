@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 The Crossplane Authors <https://crossplane.io>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+apiVersion: workspace.databricks.crossplane.io/v1beta1
+kind: Directory
+metadata:
+  annotations:
+    meta.upbound.io/example-id: e2e/cluster/directory
+    uptest.upbound.io/timeout: "1200"
+  labels:
+    testing.upbound.io/example-name: e2e-directory
+  name: e2e-directory
+spec:
+  forProvider:
+    path: ${data.directoryPath}/${Rand.RFC1123Subdomain}

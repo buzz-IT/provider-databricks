@@ -34,7 +34,7 @@ git mv "cluster/images/upjet-provider-template" "cluster/images/provider-${PROVI
 
 # We need to remove this api folder otherwise first `make generate` fails with
 # the following error probably due to some optimizations in go generate with v1.17:
-# generate: open /Users/hasanturken/Workspace/crossplane-contrib/upjet-provider-template/apis/null/v1alpha1/zz_generated.deepcopy.go: no such file or directory
+# generate: leftover sample APIs from the template make the first generate fail.
 rm -rf apis/null
 # remove the sample directory which was a configuration in the template
 rm -rf config/null

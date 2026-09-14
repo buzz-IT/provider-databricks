@@ -4,8 +4,6 @@ import "github.com/crossplane/upjet/v2/pkg/config"
 
 // Configure configures individual resources by adding custom ResourceConfigurators.
 func Configure(p *config.Provider) {
-	version := p.Resources["databricks_permissions"].Version
-
 	p.AddResourceConfigurator("databricks_permissions", func(r *config.Resource) {
 		r.ShortGroup = "security"
 		r.References["sql_endpoint_id"] = config.Reference{TerraformName: "databricks_sql_endpoint"}
@@ -22,11 +20,6 @@ func Configure(p *config.Provider) {
 			TerraformName: "databricks_service_principal",
 			Extractor:     "github.com/crossplane/upjet/v2/pkg/resource.ExtractParamPath(\"application_id\", false)",
 		}
-
-		if version == "v1alpha1" {
-			return
-		}
-
 		r.References["app_name"] = config.Reference{TerraformName: "databricks_app"}
 		r.References["vector_search_endpoint_id"] = config.Reference{TerraformName: "databricks_vector_search_endpoint"}
 		r.References["knowledge_assistant_id"] = config.Reference{TerraformName: "databricks_knowledge_assistant"}

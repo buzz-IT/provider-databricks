@@ -1,7 +1,23 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
+  "extends": ["config:recommended"],
+  "ignorePaths": ["hack/terraform-provider-databricks/**"],
+  "prConcurrentLimit": 5,
+  "baseBranches": ["main"],
+  "labels": ["automated"],
+  "regexManagers": [
+    {
+      "fileMatch": ["^\\.github\\/workflows\\/[^/]+\\.ya?ml$"],
+      "matchStrings": ["GO_VERSION: '(?<currentValue>.*?)'\\n"],
+      "datasourceTemplate": "golang-version",
+      "depNameTemplate": "golang"
+    },
+    {
+      "fileMatch": ["^\\.github\\/workflows\\/[^/]+\\.ya?ml$"],
+      "matchStrings": ["GOLANGCI_VERSION: '(?<currentValue>.*?)'\\n"],
+      "datasourceTemplate": "github-tags",
+      "depNameTemplate": "golangci/golangci-lint"
+    }
   ],
   "packageRules": [
     {

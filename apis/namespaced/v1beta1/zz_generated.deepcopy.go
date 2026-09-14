@@ -140,13 +140,13 @@ func (in *ProviderConfigSpec) DeepCopyInto(out *ProviderConfigSpec) {
 		(*in).DeepCopyInto(*out)
 	}
 	in.Credentials.DeepCopyInto(&out.Credentials)
-	if in.ClientID != nil {
-		in, out := &in.ClientID, &out.ClientID
+	if in.Host != nil {
+		in, out := &in.Host, &out.Host
 		*out = new(string)
 		**out = **in
 	}
-	if in.SubscriptionID != nil {
-		in, out := &in.SubscriptionID, &out.SubscriptionID
+	if in.ClientID != nil {
+		in, out := &in.ClientID, &out.ClientID
 		*out = new(string)
 		**out = **in
 	}
@@ -155,8 +155,8 @@ func (in *ProviderConfigSpec) DeepCopyInto(out *ProviderConfigSpec) {
 		*out = new(string)
 		**out = **in
 	}
-	if in.MSIEndpoint != nil {
-		in, out := &in.MSIEndpoint, &out.MSIEndpoint
+	if in.AzureWorkspaceResourceID != nil {
+		in, out := &in.AzureWorkspaceResourceID, &out.AzureWorkspaceResourceID
 		*out = new(string)
 		**out = **in
 	}

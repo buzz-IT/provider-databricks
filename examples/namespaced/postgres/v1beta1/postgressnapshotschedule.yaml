@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 The Crossplane Authors <https://crossplane.io>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+apiVersion: postgres.databricks.m.crossplane.io/v1beta1
+kind: PostgresSnapshotSchedule
+metadata:
+  annotations:
+    meta.upbound.io/example-id: postgres/v1beta1/postgressnapshotschedule
+  labels:
+    testing.upbound.io/example-name: example
+  name: example
+  namespace: upbound-system
+spec:
+  forProvider: {}

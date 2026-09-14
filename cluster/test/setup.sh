@@ -2,16 +2,35 @@
 set -aeuo pipefail
 
 echo "Running setup.sh"
-echo "Creating provider credential secret..."
-${KUBECTL} -n crossplane-system create secret generic provider-secret --from-literal=credentials="${UPTEST_CLOUD_CREDENTIALS}" --dry-run=client -o yaml | ${KUBECTL} apply -f -
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+KUBECTL="${KUBECTL:-kubectl}"
+CROSSPLANE_NAMESPACE="${CROSSPLANE_NAMESPACE:-crossplane-system}"
+TEST_NAMESPACE="${UPTEST_NAMESPACE:-upbound-system}"
+
+if [ -z "${UPTEST_CLOUD_CREDENTIALS:-}" ]; then
+  UPTEST_CLOUD_CREDENTIALS="$("${ROOT}/cluster/test/render-credentials.sh")"
+fi
+
+echo "Creating namespaces..."
+${KUBECTL} create namespace "${CROSSPLANE_NAMESPACE}" --dry-run=client -o yaml | ${KUBECTL} apply -f -
+${KUBECTL} create namespace "${TEST_NAMESPACE}" --dry-run=client -o yaml | ${KUBECTL} apply -f -
+
+echo "Creating provider credential secrets..."
+${KUBECTL} -n "${CROSSPLANE_NAMESPACE}" create secret generic provider-secret \
+  --from-literal=credentials="${UPTEST_CLOUD_CREDENTIALS}" \
+  --dry-run=client -o yaml | ${KUBECTL} apply -f -
+${KUBECTL} -n "${TEST_NAMESPACE}" create secret generic provider-secret \
+  --from-literal=credentials="${UPTEST_CLOUD_CREDENTIALS}" \
+  --dry-run=client -o yaml | ${KUBECTL} apply -f -
 
 echo "Waiting until provider is healthy..."
-${KUBECTL} wait provider.pkg --all --for condition=Healthy --timeout 5m
+${KUBECTL} wait provider.pkg --all --for condition=Healthy --timeout 10m
 
-echo "Waiting for all pods to come online..."
-${KUBECTL} -n crossplane-system wait --for=condition=Available deployment --all --timeout=5m
+echo "Waiting for provider pods..."
+${KUBECTL} -n "${CROSSPLANE_NAMESPACE}" wait --for=condition=Available deployment --all --timeout=10m
 
-echo "Creating a default provider config..."
+echo "Creating cluster-scoped ProviderConfig..."
 cat <<EOF | ${KUBECTL} apply -f -
 apiVersion: databricks.crossplane.io/v1beta1
 kind: ProviderConfig
@@ -22,11 +41,11 @@ spec:
     source: Secret
     secretRef:
       name: provider-secret
-      namespace: crossplane-system
+      namespace: ${CROSSPLANE_NAMESPACE}
       key: credentials
 EOF
 
-echo "Creating a default cluster provider config..."
+echo "Creating namespaced ClusterProviderConfig..."
 cat <<EOF | ${KUBECTL} apply -f -
 apiVersion: databricks.m.crossplane.io/v1beta1
 kind: ClusterProviderConfig
@@ -37,15 +56,21 @@ spec:
     source: Secret
     secretRef:
       name: provider-secret
-      namespace: crossplane-system
+      namespace: ${CROSSPLANE_NAMESPACE}
       key: credentials
 EOF
 
-# Creat a new namespace for namespaced tests name upbound-system
-echo "Creating a new namespace for namespaced tests..."
+echo "Creating namespaced ProviderConfig in ${TEST_NAMESPACE}..."
 cat <<EOF | ${KUBECTL} apply -f -
-apiVersion: v1
-kind: Namespace
+apiVersion: databricks.m.crossplane.io/v1beta1
+kind: ProviderConfig
 metadata:
-  name: upbound-system
+  name: default
+  namespace: ${TEST_NAMESPACE}
+spec:
+  credentials:
+    source: Secret
+    secretRef:
+      name: provider-secret
+      key: credentials
 EOF

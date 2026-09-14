@@ -197,115 +197,6 @@ FW_RESOURCES: dict[str, str] = {
     "workspace_setting_v2": "settings",
 }
 
-# Legacy v1alpha1 include lists keep previously generated SDK/FW resources.
-SDK_V1ALPHA1 = {
-    "access_control_rule_set",
-    "alert",
-    "artifact_allowlist",
-    "budget",
-    "catalog_workspace_binding",
-    "catalog",
-    "cluster",
-    "cluster_policy",
-    "compliance_security_profile_workspace_setting",
-    "connection",
-    "credential",
-    "custom_app_integration",
-    "dashboard",
-    "dbfs_file",
-    "default_namespace_setting",
-    "directory",
-    "enhanced_security_monitoring_workspace_setting",
-    "entitlements",
-    "external_location",
-    "file",
-    "git_credential",
-    "global_init_script",
-    "grant",
-    "grants",
-    "group_instance_profile",
-    "group_member",
-    "group_role",
-    "group",
-    "instance_pool",
-    "instance_profile",
-    "ip_access_list",
-    "job",
-    "lakehouse_monitor",
-    "library",
-    "metastore_assignment",
-    "metastore_data_access",
-    "metastore",
-    "mlflow_experiment",
-    "mlflow_model",
-    "mlflow_webhook",
-    "model_serving",
-    "mount",
-    "mws_credentials",
-    "mws_customer_managed_keys",
-    "mws_log_delivery",
-    "mws_ncc_binding",
-    "mws_ncc_private_endpoint_rule",
-    "mws_network_connectivity_config",
-    "mws_networks",
-    "mws_permission_assignment",
-    "mws_private_access_settings",
-    "mws_storage_configurations",
-    "mws_vpc_endpoint",
-    "mws_workspaces",
-    "notebook",
-    "notification_destination",
-    "obo_token",
-    "online_table",
-    "permission_assignment",
-    "permissions",
-    "pipeline",
-    "provider",
-    "query",
-    "recipient",
-    "registered_model",
-    "repo",
-    "restrict_workspace_admins_setting",
-    "schema",
-    "secret_acl",
-    "secret_scope",
-    "secret",
-    "service_principal_role",
-    "service_principal_secret",
-    "service_principal",
-    "sql_alert",
-    "sql_dashboard",
-    "sql_endpoint",
-    "sql_global_config",
-    "sql_permissions",
-    "sql_query",
-    "sql_table",
-    "sql_visualization",
-    "sql_widget",
-    "storage_credential",
-    "system_schema",
-    "token",
-    "user_instance_profile",
-    "user_role",
-    "user",
-    "vector_search_endpoint",
-    "vector_search_index",
-    "volume",
-    "workspace_binding",
-    "workspace_conf",
-    "workspace_file",
-}
-
-FW_V1ALPHA1 = {
-    "account_federation_policy",
-    "app",
-    "database_instance",
-    "quality_monitor",
-    "policy_info",
-    "service_principal_federation_policy",
-    "share",
-}
-
 CONFIG_GO = '''package {pkg}
 
 import "github.com/crossplane/upjet/v2/pkg/config"
@@ -345,8 +236,6 @@ def ident_line(name: str) -> str:
 def write_external_name() -> None:
     sdk_lines = "\n".join(ident_line(tf_name(n)) for n in sorted(SDK_RESOURCES))
     fw_lines = "\n".join(ident_line(tf_name(n)) for n in sorted(FW_RESOURCES))
-    sdk_alpha = "\n".join(ident_line(tf_name(n)) for n in sorted(SDK_V1ALPHA1))
-    fw_alpha = "\n".join(ident_line(tf_name(n)) for n in sorted(FW_V1ALPHA1))
 
     content = f'''/*
 Copyright 2022 Upbound Inc.
@@ -357,14 +246,6 @@ package config
 import (
 	"github.com/crossplane/upjet/v2/pkg/config"
 )
-
-var TerraformPluginSDKExternalNameV1Alpha1Configs = map[string]config.ExternalName{{
-{sdk_alpha}
-}}
-
-var TerraformPluginFrameworkExternalNameConfigsV1Alpha1 = map[string]config.ExternalName{{
-{fw_alpha}
-}}
 
 // TerraformPluginSDKExternalNameConfigs contains all external name configurations
 // belonging to Terraform resources to be reconciled under the no-fork
@@ -378,18 +259,6 @@ var TerraformPluginFrameworkExternalNameConfigs = map[string]config.ExternalName
 }}
 
 var CLIReconciledExternalNameConfigs = map[string]config.ExternalName{{}}
-
-// TerraformExternalNameConfigsV1Alpha1 is the union of legacy v1alpha1 include lists.
-var TerraformExternalNameConfigsV1Alpha1 = make(map[string]config.ExternalName)
-
-func init() {{
-	for k, v := range TerraformPluginSDKExternalNameV1Alpha1Configs {{
-		TerraformExternalNameConfigsV1Alpha1[k] = v
-	}}
-	for k, v := range TerraformPluginFrameworkExternalNameConfigsV1Alpha1 {{
-		TerraformExternalNameConfigsV1Alpha1[k] = v
-	}}
-}}
 
 // ExternalNameConfigurations applies all external name configs listed in the
 // table ExternalNameConfigs and sets the version of those resources to v1beta1

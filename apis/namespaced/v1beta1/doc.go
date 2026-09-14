@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-// Package v1alpha1 contains the core resources of the Template provider.
+// Package v1beta1 contains the core resources of the Databricks provider.
 // +kubebuilder:object:generate=true
 // +groupName=databricks.m.crossplane.io
 // +versionName=v1beta1

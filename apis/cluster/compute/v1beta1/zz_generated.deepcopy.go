@@ -29780,10 +29780,8 @@ func (in *LibraryInitParameters_2) DeepCopyInto(out *LibraryInitParameters_2) {
 	}
 	if in.Cran != nil {
 		in, out := &in.Cran, &out.Cran
-		*out = make([]LibraryCranInitParameters_2, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
+		*out = new(LibraryCranInitParameters_2)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Egg != nil {
 		in, out := &in.Egg, &out.Egg
@@ -29817,24 +29815,18 @@ func (in *LibraryInitParameters_2) DeepCopyInto(out *LibraryInitParameters_2) {
 	}
 	if in.Maven != nil {
 		in, out := &in.Maven, &out.Maven
-		*out = make([]LibraryMavenInitParameters_2, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
+		*out = new(LibraryMavenInitParameters_2)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.ProviderConfig != nil {
 		in, out := &in.ProviderConfig, &out.ProviderConfig
-		*out = make([]LibraryProviderConfigInitParameters_2, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
+		*out = new(LibraryProviderConfigInitParameters_2)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Pypi != nil {
 		in, out := &in.Pypi, &out.Pypi
-		*out = make([]LibraryPypiInitParameters_2, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
+		*out = new(LibraryPypiInitParameters_2)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Requirements != nil {
 		in, out := &in.Requirements, &out.Requirements
@@ -30176,10 +30168,8 @@ func (in *LibraryObservation_2) DeepCopyInto(out *LibraryObservation_2) {
 	}
 	if in.Cran != nil {
 		in, out := &in.Cran, &out.Cran
-		*out = make([]LibraryCranObservation_2, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
+		*out = new(LibraryCranObservation_2)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Egg != nil {
 		in, out := &in.Egg, &out.Egg
@@ -30198,24 +30188,18 @@ func (in *LibraryObservation_2) DeepCopyInto(out *LibraryObservation_2) {
 	}
 	if in.Maven != nil {
 		in, out := &in.Maven, &out.Maven
-		*out = make([]LibraryMavenObservation_2, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
+		*out = new(LibraryMavenObservation_2)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.ProviderConfig != nil {
 		in, out := &in.ProviderConfig, &out.ProviderConfig
-		*out = make([]LibraryProviderConfigObservation_2, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
+		*out = new(LibraryProviderConfigObservation_2)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Pypi != nil {
 		in, out := &in.Pypi, &out.Pypi
-		*out = make([]LibraryPypiObservation_2, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
+		*out = new(LibraryPypiObservation_2)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Requirements != nil {
 		in, out := &in.Requirements, &out.Requirements
@@ -30309,10 +30293,8 @@ func (in *LibraryParameters_2) DeepCopyInto(out *LibraryParameters_2) {
 	}
 	if in.Cran != nil {
 		in, out := &in.Cran, &out.Cran
-		*out = make([]LibraryCranParameters_2, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
+		*out = new(LibraryCranParameters_2)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Egg != nil {
 		in, out := &in.Egg, &out.Egg
@@ -30346,24 +30328,18 @@ func (in *LibraryParameters_2) DeepCopyInto(out *LibraryParameters_2) {
 	}
 	if in.Maven != nil {
 		in, out := &in.Maven, &out.Maven
-		*out = make([]LibraryMavenParameters_2, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
+		*out = new(LibraryMavenParameters_2)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.ProviderConfig != nil {
 		in, out := &in.ProviderConfig, &out.ProviderConfig
-		*out = make([]LibraryProviderConfigParameters_2, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
+		*out = new(LibraryProviderConfigParameters_2)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Pypi != nil {
 		in, out := &in.Pypi, &out.Pypi
-		*out = make([]LibraryPypiParameters_2, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
+		*out = new(LibraryPypiParameters_2)
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Requirements != nil {
 		in, out := &in.Requirements, &out.Requirements

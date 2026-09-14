@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 The Crossplane Authors <https://crossplane.io>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+apiVersion: security.databricks.m.crossplane.io/v1beta1
+kind: AccountIAMUserV2
+metadata:
+  annotations:
+    meta.upbound.io/example-id: security/v1beta1/accountiamuserv2
+  labels:
+    testing.upbound.io/example-name: this
+  name: this
+  namespace: upbound-system
+spec:
+  forProvider:
+    accountUserStatus: ACTIVE
+    fullName:
+      familyName: Doe
+      givenName: Jane
+    username: jane.doe@example.com

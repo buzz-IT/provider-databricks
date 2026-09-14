@@ -7,7 +7,13 @@
 package v1beta1
 
 // Hub marks this type as a conversion hub.
+func (tr *App) Hub() {}
+
+// Hub marks this type as a conversion hub.
 func (tr *AppSpace) Hub() {}
 
 // Hub marks this type as a conversion hub.
 func (tr *AppsSettingsCustomTemplate) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *CustomAppIntegration) Hub() {}

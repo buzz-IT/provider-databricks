@@ -27,6 +27,9 @@
 // Run Upjet generator
 //go:generate go run ../cmd/generator/main.go ..
 
+// Drop hardcoded apis/{cluster,namespaced}/v1alpha1 register entries; this provider ships v1beta1 only.
+//go:generate python3 ../scripts/drop_v1alpha1_register.py
+
 // Generate deepcopy methodsets and CRD manifests
 //go:generate go run -tags generate sigs.k8s.io/controller-tools/cmd/controller-gen object:headerFile=../hack/boilerplate.go.txt paths=./... crd:allowDangerousTypes=true,crdVersions=v1 output:artifacts:config=../package/crds
 

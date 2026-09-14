@@ -75,6 +75,78 @@ make build
 package required for Upjet's no-fork architecture, scrapes resource docs, and
 generates CRDs, controllers, and examples.
 
+## End-to-end tests
+
+`make e2e` starts Kind, installs Crossplane, builds this provider, and runs
+[uptest](https://github.com/crossplane/uptest) against real Databricks APIs.
+
+Default suite (cheap, workspace-level, no clusters):
+
+- `examples/e2e/cluster/secretscope.yaml`
+- `examples/e2e/cluster/directory.yaml`
+- `examples/e2e/namespaced/secretscope.yaml`
+- `examples/e2e/namespaced/directory.yaml`
+
+Optional suites (set `UPTEST_EXAMPLE_LIST`):
+
+| Suite | Paths |
+| --- | --- |
+| Groups | `examples/e2e/cluster/group.yaml,examples/e2e/namespaced/group.yaml` |
+| Unity Catalog | `examples/e2e/cluster/catalog.yaml,examples/e2e/namespaced/catalog.yaml` |
+| Compute | `examples/e2e/cluster/cluster.yaml,examples/e2e/namespaced/cluster.yaml` |
+
+### Credentials
+
+Set **either** a single JSON blob **or** individual variables. Individual
+values are assembled into the provider secret automatically.
+
+| Name | Secret or var | Required | Purpose |
+| --- | --- | --- | --- |
+| `DATABRICKS_HOST` | secret or var | yes* | Workspace or account URL |
+| `DATABRICKS_TOKEN` | secret | yes* | PAT |
+| `DATABRICKS_ACCOUNT_ID` | secret or var | no | Account-level APIs |
+| `DATABRICKS_CLIENT_ID` | secret or var | no | M2M OAuth |
+| `DATABRICKS_CLIENT_SECRET` | secret | no | M2M OAuth |
+| `DATABRICKS_AUTH_TYPE` | secret or var | no | Terraform `auth_type` |
+| `DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID` | secret or var | no | Azure Databricks |
+| `DATABRICKS_AZURE_CLIENT_ID` | secret or var | no | Azure SP |
+| `DATABRICKS_AZURE_CLIENT_SECRET` | secret | no | Azure SP |
+| `DATABRICKS_AZURE_TENANT_ID` | secret or var | no | Azure SP |
+| `DATABRICKS_AZURE_ENVIRONMENT` | var | no | Azure cloud name |
+| `DATABRICKS_AZURE_USE_MSI` | var | no | `"true"` to use MSI |
+| `DATABRICKS_GOOGLE_CREDENTIALS` | secret | no | GCP JSON key |
+| `DATABRICKS_GOOGLE_SERVICE_ACCOUNT` | secret or var | no | GCP SA email |
+| `UPTEST_CLOUD_CREDENTIALS` | secret | no | Raw provider JSON; overrides the fields above |
+
+\*Required unless you use M2M/Azure/GCP instead of a PAT, or set
+`UPTEST_CLOUD_CREDENTIALS`.
+
+### Resource parameters (Actions variables)
+
+| Name | Default |
+| --- | --- |
+| `DATABRICKS_NODE_TYPE_ID` | `Standard_DS3_v2` |
+| `DATABRICKS_SPARK_VERSION` | `15.4.x-scala2.12` |
+| `DATABRICKS_CATALOG_NAME` | `uptest_e2e` |
+| `DATABRICKS_SCHEMA_NAME` | `uptest` |
+| `DATABRICKS_DIRECTORY_PATH` | `/uptest-e2e` |
+| `DATABRICKS_GROUP_DISPLAY_NAME` | `uptest-e2e-group` |
+| `UPTEST_EXAMPLE_LIST` | smoke suite above |
+| `UPTEST_SKIP_DELETE` | unset (resources are deleted) |
+
+GitHub Actions: repository **Settings → Secrets and variables → Actions**.
+The `E2E` workflow reads secrets first, then variables. Manual runs use
+**Actions → E2E → Run workflow**. PRs and the Monday schedule skip (or, for
+manual runs, fail) when credentials are missing.
+
+Local:
+
+```console
+export DATABRICKS_HOST="https://adb-xxxxxxxx.azuredatabricks.net"
+export DATABRICKS_TOKEN="dapi..."
+make e2e
+```
+
 ## License
 
 Apache-2.0

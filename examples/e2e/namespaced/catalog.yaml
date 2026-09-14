@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2026 The Crossplane Authors <https://crossplane.io>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+apiVersion: unity.databricks.m.crossplane.io/v1beta1
+kind: Catalog
+metadata:
+  annotations:
+    meta.upbound.io/example-id: e2e/namespaced/catalog
+    uptest.upbound.io/timeout: "1800"
+  labels:
+    testing.upbound.io/example-name: e2e-ns-catalog
+  name: e2e-ns-catalog
+  namespace: upbound-system
+spec:
+  forProvider:
+    name: ${data.catalogName}_ns
+    comment: uptest e2e namespaced catalog
+    properties:
+      purpose: e2e
+---
+apiVersion: unity.databricks.m.crossplane.io/v1beta1
+kind: Schema
+metadata:
+  annotations:
+    meta.upbound.io/example-id: e2e/namespaced/catalog
+    uptest.upbound.io/timeout: "1800"
+  labels:
+    testing.upbound.io/example-name: e2e-ns-schema
+  name: e2e-ns-schema
+  namespace: upbound-system
+spec:
+  forProvider:
+    catalogNameSelector:
+      matchLabels:
+        testing.upbound.io/example-name: e2e-ns-catalog
+    name: ${data.schemaName}
+    comment: uptest e2e namespaced schema

@@ -1,0 +1,38 @@
+# SPDX-FileCopyrightText: 2026 The Crossplane Authors <https://crossplane.io>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+apiVersion: unity.databricks.m.crossplane.io/v1beta1
+kind: DataQualityMonitor
+metadata:
+  annotations:
+    meta.upbound.io/example-id: unity/v1beta1/dataqualitymonitor
+  labels:
+    testing.upbound.io/example-name: this
+  name: this
+  namespace: upbound-system
+spec:
+  forProvider:
+    anomalyDetectionConfig: {}
+    objectIdSelector:
+      matchLabels:
+        testing.upbound.io/example-name: this
+    objectType: schema
+
+---
+
+apiVersion: unity.databricks.m.crossplane.io/v1beta1
+kind: Schema
+metadata:
+  annotations:
+    meta.upbound.io/example-id: unity/v1beta1/dataqualitymonitor
+  labels:
+    testing.upbound.io/example-name: this
+  name: this
+  namespace: upbound-system
+spec:
+  forProvider:
+    catalogNameSelector:
+      matchLabels:
+        testing.upbound.io/example-name: example
+    name: my_schema

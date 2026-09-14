@@ -7,6 +7,21 @@
 package v1beta1
 
 // Hub marks this type as a conversion hub.
+func (tr *ArtifactAllowlist) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Catalog) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *CatalogWorkspaceBinding) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Connection) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Credential) Hub() {}
+
+// Hub marks this type as a conversion hub.
 func (tr *DataQualityMonitor) Hub() {}
 
 // Hub marks this type as a conversion hub.
@@ -19,16 +34,67 @@ func (tr *Domain) Hub() {}
 func (tr *EntityTagAssignment) Hub() {}
 
 // Hub marks this type as a conversion hub.
+func (tr *ExternalLocation) Hub() {}
+
+// Hub marks this type as a conversion hub.
 func (tr *ExternalMetadata) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Grant) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *GrantMap) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *LakehouseMonitor) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Metastore) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *MetastoreAssignment) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *MetastoreDataAccess) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *OnlineTable) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *PolicyInfo) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *QualityMonitor) Hub() {}
 
 // Hub marks this type as a conversion hub.
 func (tr *QualityMonitorV2) Hub() {}
 
 // Hub marks this type as a conversion hub.
+func (tr *RegisteredModel) Hub() {}
+
+// Hub marks this type as a conversion hub.
 func (tr *RfaAccessRequestDestinations) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Schema) Hub() {}
 
 // Hub marks this type as a conversion hub.
 func (tr *SecretUc) Hub() {}
 
 // Hub marks this type as a conversion hub.
+func (tr *SQLTable) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *StorageCredential) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *SystemSchema) Hub() {}
+
+// Hub marks this type as a conversion hub.
 func (tr *Table) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Volume) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *WorkspaceBinding) Hub() {}

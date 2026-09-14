@@ -17,3 +17,12 @@ func (tr *AzureAdlsGen2Mount) Hub() {}
 
 // Hub marks this type as a conversion hub.
 func (tr *AzureBlobMount) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *DbfsFile) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *File) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Mount) Hub() {}

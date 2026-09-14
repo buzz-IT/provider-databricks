@@ -19,9 +19,12 @@ export TERRAFORM_NATIVE_PROVIDER_BINARY ?= $(TERRAFORM_PROVIDER_DOWNLOAD_NAME)_v
 export TERRAFORM_DOCS_PATH ?= docs/resources
 
 
-# UPTEST_EXAMPLE_LIST ?= examples/cluster/compute/v1beta1/cluster.yaml,examples/namespaced/compute/v1beta1/cluster.yaml
-# UPTEST_EXAMPLE_LIST ?= examples/namespaced/security/v1beta1/permissions.yaml
-# UPTEST_EXAMPLE_LIST ?= examples/namespaced/compute/v1beta1/job-serverless.yaml
+# Default e2e suite: cheap workspace resources (no compute / Unity Catalog).
+# Override with UPTEST_EXAMPLE_LIST. Optional suites:
+#   examples/e2e/cluster/group.yaml,examples/e2e/namespaced/group.yaml
+#   examples/e2e/cluster/catalog.yaml,examples/e2e/namespaced/catalog.yaml
+#   examples/e2e/cluster/cluster.yaml,examples/e2e/namespaced/cluster.yaml
+UPTEST_EXAMPLE_LIST ?= examples/e2e/cluster/secretscope.yaml,examples/e2e/cluster/directory.yaml,examples/e2e/namespaced/secretscope.yaml,examples/e2e/namespaced/directory.yaml
 
 PLATFORMS ?= linux_amd64 linux_arm64
 
@@ -49,7 +52,7 @@ NPROCS ?= 1
 GO_TEST_PARALLEL := $(shell echo $$(( $(NPROCS) / 2 )))
 
 GO_REQUIRED_VERSION ?= $(shell grep -E '^go ' go.mod | awk '{print $2}')
-GOLANGCILINT_VERSION ?= 2.13.0
+GOLANGCILINT_VERSION ?= 2.13.2
 GO_STATIC_PACKAGES = $(GO_PROJECT)/cmd/provider $(GO_PROJECT)/cmd/generator
 GO_LDFLAGS += -X $(GO_PROJECT)/internal/version.Version=$(VERSION)
 GO_SUBDIRS += cmd internal apis config
@@ -58,12 +61,12 @@ GO_SUBDIRS += cmd internal apis config
 # ====================================================================================
 # Setup Kubernetes tools
 
-KIND_VERSION = v0.32.0
+KIND_VERSION = v0.33.0
 UPTEST_VERSION = v2.2.0
 CRDDIFF_VERSION = v0.12.1
-CROSSPLANE_CLI_VERSION = v2.3.4
+CROSSPLANE_CLI_VERSION = v2.4.0
 # for e2e testing
-CROSSPLANE_VERSION = 2.3.4
+CROSSPLANE_VERSION = 2.4.0
 -include build/makelib/k8s_tools.mk
 
 # ====================================================================================
@@ -126,12 +129,14 @@ TERRAFORM_PROVIDER_SCHEMA := config/schema.json
 TF_PROVIDER_MODULE := hack/terraform-provider-databricks
 
 $(TF_PROVIDER_MODULE):
-	@$(INFO) preparing terraform-provider-databricks v$(TERRAFORM_PROVIDER_VERSION) with xpprovider
-	@rm -rf $(TF_PROVIDER_MODULE)
-	@git clone -c advice.detachedHead=false --depth 1 --branch "v$(TERRAFORM_PROVIDER_VERSION)" "$(TERRAFORM_PROVIDER_REPO)" $(TF_PROVIDER_MODULE)
-	@mkdir -p $(TF_PROVIDER_MODULE)/xpprovider
-	@cp hack/xpprovider/xpprovider.go $(TF_PROVIDER_MODULE)/xpprovider/xpprovider.go
-	@$(OK) prepared terraform-provider-databricks v$(TERRAFORM_PROVIDER_VERSION)
+	@if [ ! -f $(TF_PROVIDER_MODULE)/xpprovider/xpprovider.go ]; then \
+		$(INFO) preparing terraform-provider-databricks v$(TERRAFORM_PROVIDER_VERSION) with xpprovider; \
+		rm -rf $(TF_PROVIDER_MODULE); \
+		git clone -c advice.detachedHead=false --depth 1 --branch "v$(TERRAFORM_PROVIDER_VERSION)" "$(TERRAFORM_PROVIDER_REPO)" $(TF_PROVIDER_MODULE); \
+		mkdir -p $(TF_PROVIDER_MODULE)/xpprovider; \
+		cp hack/xpprovider/xpprovider.go $(TF_PROVIDER_MODULE)/xpprovider/xpprovider.go; \
+		$(OK) prepared terraform-provider-databricks v$(TERRAFORM_PROVIDER_VERSION); \
+	fi
 
 check-terraform-version:
 ifneq ($(TERRAFORM_VERSION_VALID),1)
@@ -185,6 +190,10 @@ go.cachedir:
 go.mod.cachedir:
 	@go env GOMODCACHE
 
+# go.mod replace points at this gitignored checkout.
+go.modules.download: $(TF_PROVIDER_MODULE)
+go.modules.check: $(TF_PROVIDER_MODULE)
+
 # Generate a coverage report for cobertura applying exclusions on
 # - generated file
 cobertura:
@@ -218,35 +227,36 @@ CROSSPLANE_NAMESPACE = crossplane-system
 -include build/makelib/local.xpkg.mk
 -include build/makelib/controlplane.mk
 
-# This target requires the following environment variables to be set:
-# - UPTEST_EXAMPLE_LIST, a comma-separated list of examples to test
-#   To ensure the proper functioning of the end-to-end test resource pre-deletion hook, it is crucial to arrange your resources appropriately.
-#   You can check the basic implementation here: https://github.com/crossplane/uptest/blob/main/internal/templates/03-delete.yaml.tmpl.
-# - UPTEST_CLOUD_CREDENTIALS (optional), multiple sets of AWS IAM User credentials specified as key=value pairs.
-#   The support keys are currently `DEFAULT` and `PEER`. So, an example for the value of this env. variable is:
-#   DEFAULT='[default]
-#   aws_access_key_id = REDACTED
-#   aws_secret_access_key = REDACTED'
-#   PEER='[default]
-#   aws_access_key_id = REDACTED
-#   aws_secret_access_key = REDACTED'
-#   The associated `ProviderConfig`s will be named as `default` and `peer`.
-# - UPTEST_DATASOURCE_PATH (optional), please see https://github.com/crossplane/uptest#injecting-dynamic-values-and-datasource
-uptest: $(UPTEST) $(KUBECTL) $(CHAINSAW) $(CROSSPLANE_CLI)
+# End-to-end testing (uptest). Required credentials, either:
+#   UPTEST_CLOUD_CREDENTIALS  raw Databricks provider JSON
+# or individual vars (also used as GitHub Actions secrets/vars):
+#   DATABRICKS_HOST, DATABRICKS_TOKEN
+#   DATABRICKS_ACCOUNT_ID, DATABRICKS_CLIENT_ID, DATABRICKS_CLIENT_SECRET
+#   DATABRICKS_AUTH_TYPE
+#   DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID, DATABRICKS_AZURE_CLIENT_ID,
+#   DATABRICKS_AZURE_CLIENT_SECRET, DATABRICKS_AZURE_TENANT_ID,
+#   DATABRICKS_AZURE_ENVIRONMENT, DATABRICKS_AZURE_USE_MSI
+#   DATABRICKS_GOOGLE_CREDENTIALS, DATABRICKS_GOOGLE_SERVICE_ACCOUNT
+# Optional resource parameters:
+#   DATABRICKS_NODE_TYPE_ID, DATABRICKS_SPARK_VERSION, DATABRICKS_CATALOG_NAME,
+#   DATABRICKS_SCHEMA_NAME, DATABRICKS_DIRECTORY_PATH, DATABRICKS_GROUP_DISPLAY_NAME
+#   UPTEST_EXAMPLE_LIST, UPTEST_SKIP_DELETE=true
+UPTEST_DATASOURCE_PATH ?= $(WORK_DIR)/uptest-datasource.yaml
+UPTEST_DELETE_FLAG := $(if $(filter true,$(UPTEST_SKIP_DELETE)),--skip-delete,)
+
+uptest: $(TF_PROVIDER_MODULE) $(UPTEST) $(KUBECTL) $(CHAINSAW) $(CROSSPLANE_CLI)
 	@$(INFO) running automated tests
-	@KUBECTL=$(KUBECTL) CHAINSAW=$(CHAINSAW) CROSSPLANE_CLI=$(CROSSPLANE_CLI) CROSSPLANE_NAMESPACE=$(CROSSPLANE_NAMESPACE) $(UPTEST) e2e "${UPTEST_EXAMPLE_LIST}" --data-source="${UPTEST_DATASOURCE_PATH}" --setup-script=cluster/test/setup.sh --default-conditions="Test" || $(FAIL)
+	@UPTEST_DATASOURCE_PATH="$(UPTEST_DATASOURCE_PATH)" ./cluster/test/render-datasource.sh
+	@KUBECTL=$(KUBECTL) CHAINSAW=$(CHAINSAW) CROSSPLANE_CLI=$(CROSSPLANE_CLI) CROSSPLANE_NAMESPACE=$(CROSSPLANE_NAMESPACE) UPTEST_DATASOURCE_PATH="$(UPTEST_DATASOURCE_PATH)" $(UPTEST) e2e "${UPTEST_EXAMPLE_LIST}" --data-source="${UPTEST_DATASOURCE_PATH}" --setup-script=cluster/test/setup.sh --default-conditions="Ready" $(UPTEST_DELETE_FLAG) || $(FAIL)
 	@$(OK) running automated tests
 
-uptest-debug: $(UPTEST) $(KUBECTL) $(CHAINSAW) $(CROSSPLANE_CLI)
-	@$(INFO) running automated tests
-	@KUBECTL=$(KUBECTL) CHAINSAW=$(CHAINSAW) CROSSPLANE_CLI=$(CROSSPLANE_CLI) CROSSPLANE_NAMESPACE=$(CROSSPLANE_NAMESPACE) $(UPTEST) e2e "${UPTEST_EXAMPLE_LIST}" --data-source="${UPTEST_DATASOURCE_PATH}" --setup-script=cluster/test/setup.sh --default-conditions="Test" --skip-delete || $(FAIL)
-	@$(OK) running automated tests
+uptest-debug: UPTEST_SKIP_DELETE := true
+uptest-debug: uptest
 
-
-local-deploy: build controlplane.up local.xpkg.deploy.provider.$(PROJECT_NAME)
+local-deploy: $(TF_PROVIDER_MODULE) build controlplane.up local.xpkg.deploy.provider.$(PROJECT_NAME)
 	@$(INFO) running locally built provider
-	@$(KUBECTL) wait provider.pkg $(PROJECT_NAME) --for condition=Healthy --timeout 5m
-	@$(KUBECTL) -n crossplane-system wait --for=condition=Available deployment --all --timeout=5m
+	@$(KUBECTL) wait provider.pkg $(PROJECT_NAME) --for condition=Healthy --timeout 10m
+	@$(KUBECTL) -n crossplane-system wait --for=condition=Available deployment --all --timeout=10m
 	@$(OK) running locally built provider
 
 e2e: local-deploy uptest

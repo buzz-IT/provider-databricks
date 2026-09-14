@@ -1,15 +1,24 @@
 name: Backport
 
 on:
-  # NOTE(negz): This is a risky target, but we run this action only when and if
-  # a PR is closed, then filter down to specifically merged PRs. We also don't
-  # invoke any scripts, etc from within the repo. I believe the fact that we'll
-  # be able to review PRs before this runs makes this fairly safe.
-  # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
   pull_request_target:
     types: [closed]
-  # See also commands.yml for the /backport triggered variant of this workflow.
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   backport:
-    uses: upbound/official-providers-ci/.github/workflows/provider-backport.yml@standard-runners
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Backport merged PR
+        uses: korthout/backport-action@436145e922f9561fc5ea157ff406f21af2d6b363 # v3.2.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

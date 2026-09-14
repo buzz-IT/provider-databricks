@@ -1,12 +1,119 @@
-name: End to End Testing
+name: E2E
 
 on:
-  issue_comment:
-    types: [created]
+  workflow_dispatch:
+    inputs:
+      example_list:
+        description: Comma-separated example paths. Empty uses the default smoke suite (SecretScope + Directory, cluster and namespaced).
+        required: false
+        type: string
+      skip_delete:
+        description: Leave Databricks resources in place after the run.
+        required: false
+        type: boolean
+        default: false
+  schedule:
+    - cron: "0 6 * * 1"
+  pull_request:
+    paths:
+      - ".github/workflows/e2e.yaml"
+      - "cluster/test/**"
+      - "examples/e2e/**"
+      - "cmd/**"
+      - "config/**"
+      - "internal/**"
+      - "Makefile"
+      - "go.mod"
+
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  GO_VERSION: "1.27.1"
+
+  # Credentials: set as Actions secrets (preferred) or variables.
+  # Host + token is the usual workspace PAT path.
+  DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST != '' && secrets.DATABRICKS_HOST || vars.DATABRICKS_HOST }}
+  DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+  DATABRICKS_ACCOUNT_ID: ${{ secrets.DATABRICKS_ACCOUNT_ID != '' && secrets.DATABRICKS_ACCOUNT_ID || vars.DATABRICKS_ACCOUNT_ID }}
+  DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID != '' && secrets.DATABRICKS_CLIENT_ID || vars.DATABRICKS_CLIENT_ID }}
+  DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+  DATABRICKS_AUTH_TYPE: ${{ secrets.DATABRICKS_AUTH_TYPE != '' && secrets.DATABRICKS_AUTH_TYPE || vars.DATABRICKS_AUTH_TYPE }}
+  DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID: ${{ secrets.DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID != '' && secrets.DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID || vars.DATABRICKS_AZURE_WORKSPACE_RESOURCE_ID }}
+  DATABRICKS_AZURE_CLIENT_ID: ${{ secrets.DATABRICKS_AZURE_CLIENT_ID != '' && secrets.DATABRICKS_AZURE_CLIENT_ID || vars.DATABRICKS_AZURE_CLIENT_ID }}
+  DATABRICKS_AZURE_CLIENT_SECRET: ${{ secrets.DATABRICKS_AZURE_CLIENT_SECRET }}
+  DATABRICKS_AZURE_TENANT_ID: ${{ secrets.DATABRICKS_AZURE_TENANT_ID != '' && secrets.DATABRICKS_AZURE_TENANT_ID || vars.DATABRICKS_AZURE_TENANT_ID }}
+  DATABRICKS_AZURE_ENVIRONMENT: ${{ vars.DATABRICKS_AZURE_ENVIRONMENT }}
+  DATABRICKS_AZURE_USE_MSI: ${{ vars.DATABRICKS_AZURE_USE_MSI }}
+  DATABRICKS_GOOGLE_CREDENTIALS: ${{ secrets.DATABRICKS_GOOGLE_CREDENTIALS }}
+  DATABRICKS_GOOGLE_SERVICE_ACCOUNT: ${{ secrets.DATABRICKS_GOOGLE_SERVICE_ACCOUNT != '' && secrets.DATABRICKS_GOOGLE_SERVICE_ACCOUNT || vars.DATABRICKS_GOOGLE_SERVICE_ACCOUNT }}
+  DATABRICKS_ENVIRONMENT: ${{ vars.DATABRICKS_ENVIRONMENT }}
+  UPTEST_CLOUD_CREDENTIALS: ${{ secrets.UPTEST_CLOUD_CREDENTIALS }}
+
+  # Non-secret resource parameters (Actions variables).
+  DATABRICKS_NODE_TYPE_ID: ${{ vars.DATABRICKS_NODE_TYPE_ID }}
+  DATABRICKS_SPARK_VERSION: ${{ vars.DATABRICKS_SPARK_VERSION }}
+  DATABRICKS_CATALOG_NAME: ${{ vars.DATABRICKS_CATALOG_NAME }}
+  DATABRICKS_SCHEMA_NAME: ${{ vars.DATABRICKS_SCHEMA_NAME }}
+  DATABRICKS_DIRECTORY_PATH: ${{ vars.DATABRICKS_DIRECTORY_PATH }}
+  DATABRICKS_GROUP_DISPLAY_NAME: ${{ vars.DATABRICKS_GROUP_DISPLAY_NAME }}
 
 jobs:
   e2e:
-    uses: upbound/official-providers-ci/.github/workflows/pr-comment-trigger.yml@standard-runners
-    secrets:
-      UPTEST_CLOUD_CREDENTIALS: ${{ secrets.UPTEST_CLOUD_CREDENTIALS }}
-      UPTEST_DATASOURCE: ${{ secrets.UPTEST_DATASOURCE }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Check Databricks credentials
+        id: creds
+        run: |
+          if [ -n "${UPTEST_CLOUD_CREDENTIALS}" ] || [ -n "${DATABRICKS_TOKEN}" ] || { [ -n "${DATABRICKS_CLIENT_ID}" ] && [ -n "${DATABRICKS_CLIENT_SECRET}" ]; } || [ -n "${DATABRICKS_AZURE_CLIENT_SECRET}" ] || [ -n "${DATABRICKS_GOOGLE_CREDENTIALS}" ]; then
+            if [ -z "${DATABRICKS_HOST}" ] && [ -z "${UPTEST_CLOUD_CREDENTIALS}" ]; then
+              echo "DATABRICKS_HOST is required unless UPTEST_CLOUD_CREDENTIALS is set"
+              exit 1
+            fi
+            echo "available=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "available=false" >> "${GITHUB_OUTPUT}"
+            echo "No Databricks credentials configured. Set DATABRICKS_HOST + DATABRICKS_TOKEN (or M2M/Azure/GCP / UPTEST_CLOUD_CREDENTIALS) as Actions secrets."
+          fi
+
+      - name: Skip when credentials are missing
+        if: steps.creds.outputs.available != 'true'
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "workflow_dispatch requires Databricks credentials"
+            exit 1
+          fi
+          echo "Skipping e2e; credentials are not configured on this repository."
+
+      - name: Checkout
+        if: steps.creds.outputs.available == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          submodules: true
+
+      - name: Setup Go
+        if: steps.creds.outputs.available == 'true'
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Clone terraform-provider-databricks for no-fork
+        if: steps.creds.outputs.available == 'true'
+        run: make hack/terraform-provider-databricks
+
+      - name: Download Go modules
+        if: steps.creds.outputs.available == 'true'
+        run: make modules.download modules.check
+
+      - name: Run e2e
+        if: steps.creds.outputs.available == 'true'
+        env:
+          UPTEST_EXAMPLE_LIST: ${{ github.event.inputs.example_list || vars.UPTEST_EXAMPLE_LIST }}
+          UPTEST_SKIP_DELETE: ${{ github.event.inputs.skip_delete == 'true' && 'true' || vars.UPTEST_SKIP_DELETE }}
+        run: make e2e

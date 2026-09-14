@@ -10,7 +10,7 @@ import (
 )
 
 func Test_oidcAuth_tokenFilePath(t *testing.T) {
-	subID, tenantID, clientID := "sub", "tenant", "client"
+	tenantID, clientID := "tenant", "client"
 	explicitPath := "/explicit/path/azure-identity-token"
 	envPath := "/var/run/secrets/azure/wi/token/azure-identity-token"
 
@@ -46,7 +46,6 @@ func Test_oidcAuth_tokenFilePath(t *testing.T) {
 				t.Setenv(envAzureFederatedTokenFile, tc.envValue)
 			}
 			pcSpec := &namespacedv1beta1.ProviderConfigSpec{
-				SubscriptionID:    &subID,
 				TenantID:          &tenantID,
 				ClientID:          &clientID,
 				OidcTokenFilePath: tc.oidcTokenFilePath,
@@ -55,22 +54,22 @@ func Test_oidcAuth_tokenFilePath(t *testing.T) {
 			if err := oidcAuth(pcSpec, ps); err != nil {
 				t.Fatalf("oidcAuth() returned unexpected error: %v", err)
 			}
-			got, _ := ps.Configuration[keyOidcTokenFilePath].(string)
+			got, _ := ps.Configuration[keyDatabricksIDTokenFile].(string)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("oidc_token_file_path mismatch (-want +got):\n%s", diff)
+				t.Errorf("databricks_id_token_filepath mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
 }
 
 func Test_msiAuth(t *testing.T) {
-	subID, tenantID, clientID, endpoint, environment := "sub", "tenant", "client", "endpoint", "environment"
+	host, tenantID, clientID, workspace, environment := "https://adb.example.net", "tenant", "client", "/subscriptions/x/resourceGroups/rg/providers/Microsoft.Databricks/workspaces/ws", "public"
 	pcSpec := &namespacedv1beta1.ProviderConfigSpec{
-		SubscriptionID: &subID,
-		TenantID:       &tenantID,
-		ClientID:       &clientID,
-		MSIEndpoint:    &endpoint,
-		Environment:    &environment,
+		Host:                     &host,
+		TenantID:                 &tenantID,
+		ClientID:                 &clientID,
+		AzureWorkspaceResourceID: &workspace,
+		Environment:              &environment,
 	}
 	ps := &terraform.Setup{Configuration: terraform.ProviderConfiguration{}}
 
@@ -79,12 +78,13 @@ func Test_msiAuth(t *testing.T) {
 	}
 
 	want := terraform.ProviderConfiguration{
-		keySubscriptionID: subID,
-		keyTenantID:       tenantID,
-		keyClientID:       clientID,
-		keyUseMSI:         "true",
-		keyMSIEndpoint:    endpoint,
-		keyEnvironment:    environment,
+		keyAzureUseMsi:              true,
+		keyAuthType:                 "azure-msi",
+		keyHost:                     host,
+		keyAzureTenantID:            tenantID,
+		keyAzureClientID:            clientID,
+		keyAzureWorkspaceResourceID: workspace,
+		keyAzureEnvironment:         environment,
 	}
 	if diff := cmp.Diff(want, ps.Configuration); diff != "" {
 		t.Errorf("MSI configuration mismatch (-want +got):\n%s", diff)
@@ -92,12 +92,11 @@ func Test_msiAuth(t *testing.T) {
 }
 
 func Test_upboundAuth(t *testing.T) {
-	subID, tenantID, clientID, environment := "sub", "tenant", "client", "environment"
+	tenantID, clientID, environment := "tenant", "client", "public"
 	pcSpec := &namespacedv1beta1.ProviderConfigSpec{
-		SubscriptionID: &subID,
-		TenantID:       &tenantID,
-		ClientID:       &clientID,
-		Environment:    &environment,
+		TenantID:    &tenantID,
+		ClientID:    &clientID,
+		Environment: &environment,
 	}
 	ps := &terraform.Setup{Configuration: terraform.ProviderConfiguration{}}
 
@@ -106,12 +105,11 @@ func Test_upboundAuth(t *testing.T) {
 	}
 
 	want := terraform.ProviderConfiguration{
-		keyOidcTokenFilePath: upboundProviderIdentityTokenFile,
-		keySubscriptionID:    subID,
-		keyTenantID:          tenantID,
-		keyClientID:          clientID,
-		keyUseOIDC:           "true",
-		keyEnvironment:       environment,
+		keyAuthType:              "github-oidc-azure",
+		keyDatabricksIDTokenFile: upboundProviderIdentityTokenFile,
+		keyAzureTenantID:         tenantID,
+		keyAzureClientID:         clientID,
+		keyAzureEnvironment:      environment,
 	}
 	if diff := cmp.Diff(want, ps.Configuration); diff != "" {
 		t.Errorf("Upbound configuration mismatch (-want +got):\n%s", diff)
@@ -124,9 +122,8 @@ func Test_sourceAuth_requiredFields(t *testing.T) {
 		make func(*namespacedv1beta1.ProviderConfigSpec, *terraform.Setup) error
 		want string
 	}{
-		{name: "MSI subscription ID", make: msiAuth, want: errSubscriptionIDNotSet},
-		{name: "OIDC subscription ID", make: oidcAuth, want: errSubscriptionIDNotSet},
-		{name: "Upbound subscription ID", make: upboundAuth, want: errSubscriptionIDNotSet},
+		{name: "OIDC tenant ID", make: oidcAuth, want: errTenantIDNotSet},
+		{name: "Upbound tenant ID", make: upboundAuth, want: errTenantIDNotSet},
 	}
 	for _, tc := range fields {
 		t.Run(tc.name, func(t *testing.T) {

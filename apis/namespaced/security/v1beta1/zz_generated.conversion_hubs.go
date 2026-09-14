@@ -7,6 +7,9 @@
 package v1beta1
 
 // Hub marks this type as a conversion hub.
+func (tr *AccessControlRuleSet) Hub() {}
+
+// Hub marks this type as a conversion hub.
 func (tr *AccountIAMDirectGroupMemberV2) Hub() {}
 
 // Hub marks this type as a conversion hub.
@@ -20,6 +23,69 @@ func (tr *AccountIAMUserV2) Hub() {}
 
 // Hub marks this type as a conversion hub.
 func (tr *AccountIAMWorkspaceAssignmentV2) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Entitlements) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Group) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *GroupInstanceProfile) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *GroupMember) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *GroupRole) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *IPAccessList) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *MwsPermissionAssignment) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *OboToken) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *PermissionAssignment) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Permissions) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Secret) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *SecretACL) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *SecretScope) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *ServicePrincipal) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *ServicePrincipalRole) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *ServicePrincipalSecret) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *SQLPermissions) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *Token) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *User) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *UserInstanceProfile) Hub() {}
+
+// Hub marks this type as a conversion hub.
+func (tr *UserRole) Hub() {}
 
 // Hub marks this type as a conversion hub.
 func (tr *WorkspaceIAMDirectGroupMemberV2) Hub() {}
