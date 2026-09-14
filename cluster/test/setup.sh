@@ -24,25 +24,6 @@ ${KUBECTL} -n "${TEST_NAMESPACE}" create secret generic provider-secret \
   --from-literal=credentials="${UPTEST_CLOUD_CREDENTIALS}" \
   --dry-run=client -o yaml | ${KUBECTL} apply -f -
 
-echo "Enabling provider debug logs..."
-cat <<EOF | ${KUBECTL} apply -f -
-apiVersion: pkg.crossplane.io/v1beta1
-kind: DeploymentRuntimeConfig
-metadata:
-  name: debug
-spec:
-  deploymentTemplate:
-    spec:
-      selector: {}
-      template:
-        spec:
-          containers:
-          - name: package-runtime
-            args:
-            - --debug
-EOF
-${KUBECTL} patch provider.pkg provider-databricks --type merge -p '{"spec":{"runtimeConfigRef":{"name":"debug"}}}' || true
-
 echo "Waiting until provider is healthy..."
 ${KUBECTL} wait provider.pkg --all --for condition=Healthy --timeout 10m
 
